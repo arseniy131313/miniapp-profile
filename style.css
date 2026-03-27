@@ -70,7 +70,7 @@ body {
   z-index: 2;
   width: min(100%, 440px);
   margin: 0 auto;
-  padding: 14px 14px 28px;
+  padding: calc(env(safe-area-inset-top, 0px) + 48px) 14px 28px;
 }
 
 .topbar {
@@ -161,7 +161,6 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-top: 14px;
 }
 
 .stat-box {
@@ -465,18 +464,6 @@ body {
   animation: toastIn 0.25s ease;
   text-align: center;
   max-width: calc(100% - 32px);
-}
-
-.badge {
-  display: inline-block;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(59, 130, 246, 0.15);
-  color: #bfdbfe;
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
 }
 
 .kv {

@@ -130,14 +130,6 @@ function getSubscriptionTitle() {
 function renderHome() {
   appContent.innerHTML = `
     <section class="card fade-in">
-      <div class="section-title">
-        <div>
-          <h2>Главная</h2>
-          <p>Покупка подписки и подключение устройств</p>
-        </div>
-        <span class="badge">${state.subscription.active ? "Активен" : "Не активен"}</span>
-      </div>
-
       <div class="stats-row">
         <div class="stat-box">
           <div class="label">Подписка</div>
@@ -214,12 +206,19 @@ function renderPlans() {
     </section>
   `;
 
-  document.querySelectorAll(".plan-card").forEach((btn) => {
+  const planButtons = document.querySelectorAll(".plan-card");
+
+  planButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       hapticSelection();
+
       const id = Number(btn.dataset.planId);
-      state.selectedPlan = state.plans.find((p) => p.id === id);
-      renderPlans();
+      const plan = state.plans.find((p) => p.id === id);
+
+      state.selectedPlan = plan;
+
+      planButtons.forEach((item) => item.classList.remove("active"));
+      btn.classList.add("active");
     });
   });
 
