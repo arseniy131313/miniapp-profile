@@ -21,22 +21,47 @@ const state = {
     expiresAt: null
   },
   plans: [
-    { id: 1, name: "1 месяц", price: "199₽", days: 30, description: "Для знакомства" },
-    { id: 2, name: "3 месяца", price: "499₽", days: 90, description: "Выгодный старт" },
-    { id: 3, name: "12 месяцев", price: "1490₽", days: 365, description: "Лучшее предложение" }
-  ],
-  servers: [
-    { id: 1, name: "Germany #1", country: "Германия", ping: "42 ms", status: "Онлайн" },
-    { id: 2, name: "Netherlands #1", country: "Нидерланды", ping: "48 ms", status: "Онлайн" },
-    { id: 3, name: "Poland #1", country: "Польша", ping: "36 ms", status: "Онлайн" },
-    { id: 4, name: "USA #1", country: "США", ping: "96 ms", status: "Онлайн" },
-    { id: 5, name: "Turkey #1", country: "Турция", ping: "71 ms", status: "Онлайн" },
-    { id: 6, name: "Finland #1", country: "Финляндия", ping: "39 ms", status: "Онлайн" }
+    {
+      id: 1,
+      name: "1 месяц",
+      price: "199₽",
+      days: 30,
+      description: "Для знакомства"
+    },
+    {
+      id: 2,
+      name: "3 месяца",
+      price: "499₽",
+      days: 90,
+      description: "Выгодный старт"
+    },
+    {
+      id: 3,
+      name: "12 месяцев",
+      price: "1490₽",
+      days: 365,
+      description: "Лучшее предложение"
+    }
   ],
   keys: [
-    { id: 1, name: "WireGuard ключ", type: "WireGuard", meta: "Готов к подключению" },
-    { id: 2, name: "Outline ключ", type: "Outline", meta: "Можно скопировать в 1 тап" },
-    { id: 3, name: "OpenVPN конфиг", type: "OpenVPN", meta: "Скачать .ovpn" }
+    {
+      id: 1,
+      name: "WireGuard ключ",
+      type: "WireGuard",
+      meta: "Готов к подключению"
+    },
+    {
+      id: 2,
+      name: "Outline ключ",
+      type: "Outline",
+      meta: "Можно скопировать в 1 тап"
+    },
+    {
+      id: 3,
+      name: "OpenVPN конфиг",
+      type: "OpenVPN",
+      meta: "Получение конфигурации"
+    }
   ],
   payments: []
 };
@@ -75,6 +100,7 @@ function setTelegramUser() {
     const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
     state.user.name = fullName || "Пользователь";
     state.user.username = user.username ? `@${user.username}` : `id${user.id}`;
+
     if (user.photo_url) {
       state.user.avatar = user.photo_url;
     }
@@ -89,11 +115,11 @@ function updateStatusBar() {
   if (state.subscription.active) {
     statusText.textContent = "VPN активен";
     statusDot.style.background = "#22c55e";
-    statusDot.style.boxShadow = "0 0 10px rgba(34,197,94,0.7)";
+    statusDot.style.boxShadow = "0 0 10px rgba(34, 197, 94, 0.7)";
   } else {
     statusText.textContent = "VPN не активен";
     statusDot.style.background = "#ef4444";
-    statusDot.style.boxShadow = "0 0 10px rgba(239,68,68,0.7)";
+    statusDot.style.boxShadow = "0 0 10px rgba(239, 68, 68, 0.7)";
   }
 }
 
@@ -122,7 +148,7 @@ function renderHome() {
       <div class="section-title">
         <div>
           <h2>Главная</h2>
-          <p>Ваш VPN в одном Mini App</p>
+          <p>Управление подпиской и быстрый доступ к VPN</p>
         </div>
         <span class="badge">${state.subscription.active ? "Активен" : "Не активен"}</span>
       </div>
@@ -139,8 +165,8 @@ function renderHome() {
       </div>
 
       <div class="action-row">
-        <button class="primary-btn" id="goToPlansBtn">Купить VPN</button>
-        <button class="secondary-btn" id="goToServersBtn">Серверы</button>
+        <button class="primary-btn" id="goToPlansBtn" type="button">Купить VPN</button>
+        <button class="secondary-btn" id="openVpnBtn" type="button">Открыть VPN</button>
       </div>
     </section>
 
@@ -155,14 +181,17 @@ function renderHome() {
         <strong>${activePlanText}</strong>
       </div>
       <div class="kv">
-        <span>Серверов</span>
-        <strong>${state.servers.length}</strong>
+        <span>Доступ</span>
+        <strong>${state.subscription.active ? "Готов к подключению" : "Требуется покупка"}</strong>
       </div>
     </section>
 
     <section class="card fade-in delay-1">
-      <h3>Преимущества</h3>
-      <div class="small-text">⚡ Быстрое подключение · 🔒 Защищённый трафик · 🌍 Доступ к нескольким странам</div>
+      <h3>Как это работает</h3>
+      <div class="small-text">
+        После оплаты пользователь получает доступ или конфигурацию для подключения в VPN-клиенте.
+        Список серверов уже отображается внутри самого клиента.
+      </div>
     </section>
   `;
 
@@ -171,9 +200,9 @@ function renderHome() {
     navigate("plans");
   });
 
-  document.getElementById("goToServersBtn").addEventListener("click", () => {
+  document.getElementById("openVpnBtn").addEventListener("click", () => {
     hapticLight();
-    navigate("servers");
+    showToast("Здесь позже будет ссылка на VPN-клиент");
   });
 }
 
@@ -192,8 +221,12 @@ function renderPlans() {
       </div>
 
       <div class="plan-list">
-        ${state.plans.map(plan => `
-          <button class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""}" data-plan-id="${plan.id}">
+        ${state.plans.map((plan) => `
+          <button
+            class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""}"
+            data-plan-id="${plan.id}"
+            type="button"
+          >
             <div class="plan-head">
               <span class="plan-name">${plan.name}</span>
               <span class="plan-price">${plan.price}</span>
@@ -204,16 +237,16 @@ function renderPlans() {
       </div>
 
       <div class="action-row">
-        <button class="primary-btn" id="openPaymentBtn">Перейти к оплате</button>
+        <button class="primary-btn" id="openPaymentBtn" type="button">Перейти к оплате</button>
       </div>
     </section>
   `;
 
-  document.querySelectorAll(".plan-card").forEach(btn => {
+  document.querySelectorAll(".plan-card").forEach((btn) => {
     btn.addEventListener("click", () => {
       hapticSelection();
       const id = Number(btn.dataset.planId);
-      state.selectedPlan = state.plans.find(p => p.id === id);
+      state.selectedPlan = state.plans.find((p) => p.id === id);
       renderPlans();
     });
   });
@@ -224,96 +257,13 @@ function renderPlans() {
   });
 }
 
-function renderServers() {
-  appContent.innerHTML = `
-    <section class="card fade-in">
-      <div class="section-title">
-        <div>
-          <h2>Серверы</h2>
-          <p>Выберите сервер для подключения</p>
-        </div>
-        <span class="badge">${state.servers.length} шт.</span>
-      </div>
-
-      <div class="server-list">
-        ${state.servers.map(server => `
-          <div class="server-card">
-            <div class="server-head">
-              <span class="server-name">${server.name}</span>
-              <span class="server-country">${server.country}</span>
-            </div>
-            <div class="server-meta">Ping: ${server.ping}</div>
-            <div class="action-row">
-              <span class="server-status">${server.status}</span>
-              <button class="secondary-btn connect-server-btn" data-server-id="${server.id}">Подключиться</button>
-            </div>
-          </div>
-        `).join("")}
-      </div>
-    </section>
-
-    <section class="card fade-in delay-1">
-      <h3>Мои ключи</h3>
-      <div class="key-list">
-        ${state.keys.map(key => `
-          <div class="key-card">
-            <div class="key-head">
-              <span class="key-name">${key.name}</span>
-              <span class="key-type">${key.type}</span>
-            </div>
-            <div class="key-meta">${key.meta}</div>
-            <div class="action-row">
-              <button class="secondary-btn copy-key-btn" data-key-id="${key.id}">Скопировать</button>
-              <button class="primary-btn download-key-btn" data-key-id="${key.id}">Скачать</button>
-            </div>
-          </div>
-        `).join("")}
-      </div>
-    </section>
-  `;
-
-  document.querySelectorAll(".connect-server-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      hapticLight();
-      const serverId = Number(btn.dataset.serverId);
-      const server = state.servers.find(s => s.id === serverId);
-      showToast(`Подключение к ${server.name}`);
-    });
-  });
-
-  document.querySelectorAll(".copy-key-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      hapticLight();
-      const keyId = Number(btn.dataset.keyId);
-      const key = state.keys.find(k => k.id === keyId);
-      const fakeKey = `${key.type.toLowerCase()}://demo-key-${key.id}-123456`;
-
-      try {
-        await navigator.clipboard.writeText(fakeKey);
-        showToast(`${key.type} ключ скопирован`);
-      } catch {
-        showToast("Не удалось скопировать ключ");
-      }
-    });
-  });
-
-  document.querySelectorAll(".download-key-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      hapticLight();
-      const keyId = Number(btn.dataset.keyId);
-      const key = state.keys.find(k => k.id === keyId);
-      showToast(`Скачивание: ${key.name}`);
-    });
-  });
-}
-
 function renderProfile() {
   appContent.innerHTML = `
     <section class="card fade-in">
       <div class="section-title">
         <div>
           <h2>Профиль</h2>
-          <p>Данные пользователя и история платежей</p>
+          <p>Данные пользователя и доступ к VPN</p>
         </div>
       </div>
 
@@ -334,34 +284,87 @@ function renderProfile() {
     <section class="card fade-in delay-1">
       <div class="section-title">
         <div>
+          <h3>Доступ к VPN</h3>
+          <p>Подключение через внешний клиент</p>
+        </div>
+      </div>
+
+      <div class="key-list">
+        ${state.keys.map((key) => `
+          <div class="key-card">
+            <div class="key-head">
+              <span class="key-name">${key.name}</span>
+              <span class="key-type">${key.type}</span>
+            </div>
+            <div class="key-meta">${key.meta}</div>
+            <div class="action-row">
+              <button class="secondary-btn copy-key-btn" data-key-id="${key.id}" type="button">Скопировать</button>
+              <button class="primary-btn download-key-btn" data-key-id="${key.id}" type="button">Получить</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="card fade-in delay-1">
+      <div class="section-title">
+        <div>
           <h3>История платежей</h3>
           <p>${state.payments.length ? "Последние операции" : "Пока пусто"}</p>
         </div>
       </div>
 
       <div class="history-list">
-        ${state.payments.length ? state.payments.map(payment => `
-          <div class="history-item">
-            <div class="history-head">
-              <span class="plan-name">${payment.plan}</span>
-              <span class="plan-price">${payment.price}</span>
+        ${state.payments.length
+          ? state.payments.map((payment) => `
+            <div class="history-item">
+              <div class="history-head">
+                <span class="plan-name">${payment.plan}</span>
+                <span class="plan-price">${payment.price}</span>
+              </div>
+              <div class="history-meta">
+                Метод: ${payment.method}<br>
+                Дата: ${payment.date}<br>
+                Статус: ${payment.status}
+              </div>
             </div>
-            <div class="history-meta">
-              Метод: ${payment.method}<br>
-              Дата: ${payment.date}<br>
-              Статус: ${payment.status}
-            </div>
-          </div>
-        `).join("") : `<div class="small-text">Платежей пока нет</div>`}
+          `).join("")
+          : `<div class="small-text">Платежей пока нет</div>`}
       </div>
     </section>
   `;
+
+  document.querySelectorAll(".copy-key-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      hapticLight();
+
+      const keyId = Number(btn.dataset.keyId);
+      const key = state.keys.find((k) => k.id === keyId);
+      const fakeKey = `${key.type.toLowerCase()}://demo-key-${key.id}-123456`;
+
+      try {
+        await navigator.clipboard.writeText(fakeKey);
+        showToast(`${key.type} ключ скопирован`);
+      } catch {
+        showToast("Не удалось скопировать ключ");
+      }
+    });
+  });
+
+  document.querySelectorAll(".download-key-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      hapticLight();
+      const keyId = Number(btn.dataset.keyId);
+      const key = state.keys.find((k) => k.id === keyId);
+      showToast(`Выдача доступа: ${key.name}`);
+    });
+  });
 }
 
 function navigate(screen) {
   state.currentScreen = screen;
 
-  document.querySelectorAll(".nav-btn").forEach(btn => {
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.screen === screen);
   });
 
@@ -371,9 +374,6 @@ function navigate(screen) {
       break;
     case "plans":
       renderPlans();
-      break;
-    case "servers":
-      renderServers();
       break;
     case "profile":
       renderProfile();
@@ -392,7 +392,7 @@ function openPaymentModal() {
   modalPlanPrice.textContent = state.selectedPlan.price;
   paymentModal.classList.remove("hidden");
 
-  document.querySelectorAll(".payment-method").forEach(btn => {
+  document.querySelectorAll(".payment-method").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.method === state.selectedPaymentMethod);
   });
 }
@@ -409,6 +409,7 @@ function simulatePayment() {
 
   setTimeout(() => {
     const now = new Date();
+
     const payment = {
       plan: plan.name,
       price: plan.price,
@@ -427,25 +428,26 @@ function simulatePayment() {
     closePayment();
     confirmPaymentBtn.disabled = false;
     confirmPaymentBtn.textContent = "Оплатить";
+
     hapticSuccess();
     showToast(`Оплата прошла: ${plan.name}`);
-
     navigate("profile");
   }, 1200);
 }
 
-document.querySelectorAll(".nav-btn").forEach(btn => {
+document.querySelectorAll(".nav-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     hapticSelection();
     navigate(btn.dataset.screen);
   });
 });
 
-document.querySelectorAll(".payment-method").forEach(btn => {
+document.querySelectorAll(".payment-method").forEach((btn) => {
   btn.addEventListener("click", () => {
     hapticSelection();
     state.selectedPaymentMethod = btn.dataset.method;
-    document.querySelectorAll(".payment-method").forEach(item => {
+
+    document.querySelectorAll(".payment-method").forEach((item) => {
       item.classList.toggle("active", item.dataset.method === state.selectedPaymentMethod);
     });
   });

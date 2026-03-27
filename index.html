@@ -15,11 +15,12 @@
     <header class="topbar glass fade-in">
       <div class="profile-mini">
         <img id="userAvatar" class="avatar" src="https://via.placeholder.com/80" alt="avatar">
-        <div>
+        <div class="profile-text">
           <h1 id="userName">Пользователь</h1>
           <p id="userUsername">@username</p>
         </div>
       </div>
+
       <div class="topbar-status">
         <span class="status-dot" id="statusDot"></span>
         <span id="statusText">VPN не активен</span>
@@ -31,17 +32,17 @@
     <nav class="bottom-nav glass fade-in delay-2">
       <button class="nav-btn active" data-screen="home">Главная</button>
       <button class="nav-btn" data-screen="plans">Тарифы</button>
-      <button class="nav-btn" data-screen="servers">Серверы</button>
       <button class="nav-btn" data-screen="profile">Профиль</button>
     </nav>
   </div>
 
   <div id="paymentModal" class="modal hidden">
     <div class="modal-backdrop" id="paymentBackdrop"></div>
+
     <div class="modal-content glass">
       <div class="modal-header">
         <h3>Оплата VPN</h3>
-        <button id="closePaymentModal" class="icon-btn">✕</button>
+        <button id="closePaymentModal" class="icon-btn" type="button">✕</button>
       </div>
 
       <div class="modal-body">
@@ -57,12 +58,12 @@
         </div>
 
         <div class="payment-methods">
-          <button class="payment-method active" data-method="ЮKassa">ЮKassa</button>
-          <button class="payment-method" data-method="Telegram Stars">Telegram Stars</button>
-          <button class="payment-method" data-method="Crypto">Crypto</button>
+          <button class="payment-method active" data-method="ЮKassa" type="button">ЮKassa</button>
+          <button class="payment-method" data-method="Telegram Stars" type="button">Telegram Stars</button>
+          <button class="payment-method" data-method="Crypto" type="button">Crypto</button>
         </div>
 
-        <button id="confirmPaymentBtn" class="primary-btn">Оплатить</button>
+        <button id="confirmPaymentBtn" class="primary-btn" type="button">Оплатить</button>
       </div>
     </div>
   </div>
