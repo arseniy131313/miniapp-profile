@@ -70,7 +70,7 @@ body {
   z-index: 2;
   width: min(100%, 440px);
   margin: 0 auto;
-  padding: calc(env(safe-area-inset-top, 0px) + 80px) 14px 28px;
+  padding: calc(env(safe-area-inset-top, 0px) + 100px) 14px 28px;
 }
 
 .topbar {
