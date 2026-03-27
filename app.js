@@ -26,8 +26,7 @@ const state = {
   subscription: {
     active: false,
     plan: null,
-    daysLeft: 0,
-    expiresAt: null
+    daysLeft: 0
   },
   plans: [
     {
@@ -51,8 +50,7 @@ const state = {
       days: 365,
       description: "Лучшее предложение"
     }
-  ],
-  payments: []
+  ]
 };
 
 const appContent = document.getElementById("appContent");
@@ -121,29 +119,29 @@ function showToast(message) {
   }, 1800);
 }
 
-function formatSubscriptionText() {
+function getSubscriptionTitle() {
   if (!state.subscription.active) {
-    return "Нет активной подписки";
+    return "Нет подписки";
   }
 
-  return `${state.subscription.plan} · ${state.subscription.daysLeft} дней`;
+  return state.subscription.plan || "Активна";
 }
 
 function renderHome() {
-  const activePlanText = formatSubscriptionText();
-
   appContent.innerHTML = `
     <section class="card fade-in">
       <div class="section-title">
         <div>
-          <p>Управление подпиской</p>
+          <h2>Главная</h2>
+          <p>Покупка подписки и подключение устройств</p>
         </div>
+        <span class="badge">${state.subscription.active ? "Активен" : "Не активен"}</span>
       </div>
 
       <div class="stats-row">
         <div class="stat-box">
           <div class="label">Подписка</div>
-          <div class="value">${state.subscription.active ? state.subscription.plan : "Нет"}</div>
+          <div class="value">${getSubscriptionTitle()}</div>
         </div>
         <div class="stat-box">
           <div class="label">Осталось</div>
@@ -152,32 +150,17 @@ function renderHome() {
       </div>
 
       <div class="action-row">
-        <button class="primary-btn" id="goToPlansBtn" type="button">Купить VPN</button>
-        <button class="secondary-btn" id="openVpnBtn" type="button">Открыть VPN</button>
-      </div>
-    </section>
-
-    <section class="card fade-in delay-1">
-      <h3>Моя подписка</h3>
-      <div class="kv">
-        <span>Статус</span>
-        <strong>${state.subscription.active ? "Активна" : "Неактивна"}</strong>
-      </div>
-      <div class="kv">
-        <span>План</span>
-        <strong>${activePlanText}</strong>
-      </div>
-      <div class="kv">
-        <span>Доступ</span>
-        <strong>${state.subscription.active ? "Готов к подключению" : "Требуется покупка"}</strong>
+        <button class="primary-btn" id="goToPlansBtn" type="button">Купить</button>
+        <button class="secondary-btn" id="goToDevicesBtn" type="button">Подключить</button>
       </div>
     </section>
 
     <section class="card fade-in delay-1">
       <h3>Как это работает</h3>
       <div class="small-text">
-        После оплаты пользователь получает доступ или конфигурацию для подключения в VPN-клиенте.
-        Список серверов уже отображается внутри самого клиента.
+        Сначала пользователь выбирает тариф и оплачивает подписку.
+        После этого можно открыть инструкции для нужного устройства и подключить VPN.
+        При покупке нового тарифа оставшиеся дни не пропадают, а прибавляются.
       </div>
     </section>
   `;
@@ -187,9 +170,9 @@ function renderHome() {
     navigate("plans");
   });
 
-  document.getElementById("openVpnBtn").addEventListener("click", () => {
+  document.getElementById("goToDevicesBtn").addEventListener("click", () => {
     hapticLight();
-    showToast("Здесь позже будет ссылка на VPN-клиент");
+    navigate("devices");
   });
 }
 
@@ -226,6 +209,8 @@ function renderPlans() {
       <div class="action-row">
         <button class="primary-btn" id="openPaymentBtn" type="button">Перейти к оплате</button>
       </div>
+
+      <button class="back-btn" id="backHomeFromPlans" type="button">Назад на главную</button>
     </section>
   `;
 
@@ -242,37 +227,20 @@ function renderPlans() {
     hapticLight();
     openPaymentModal();
   });
+
+  document.getElementById("backHomeFromPlans").addEventListener("click", () => {
+    hapticLight();
+    navigate("home");
+  });
 }
 
-function renderProfile() {
+function renderDevices() {
   appContent.innerHTML = `
     <section class="card fade-in">
       <div class="section-title">
         <div>
-          <h2>Профиль</h2>
-          <p>Данные пользователя и доступ к VPN</p>
-        </div>
-      </div>
-
-      <div class="kv">
-        <span>Имя</span>
-        <strong>${state.user.name}</strong>
-      </div>
-      <div class="kv">
-        <span>Username</span>
-        <strong>${state.user.username}</strong>
-      </div>
-      <div class="kv">
-        <span>Подписка</span>
-        <strong>${formatSubscriptionText()}</strong>
-      </div>
-    </section>
-
-    <section class="card fade-in delay-1">
-      <div class="section-title">
-        <div>
-          <h3>Устройства подключения</h3>
-          <p>Выбери устройство для получения инструкции</p>
+          <h2>Подключение</h2>
+          <p>Выбери устройство для инструкции</p>
         </div>
       </div>
 
@@ -285,33 +253,8 @@ function renderProfile() {
           </button>
         `).join("")}
       </div>
-    </section>
 
-    <section class="card fade-in delay-1">
-      <div class="section-title">
-        <div>
-          <h3>История платежей</h3>
-          <p>${state.payments.length ? "Последние операции" : "Пока пусто"}</p>
-        </div>
-      </div>
-
-      <div class="history-list">
-        ${state.payments.length
-          ? state.payments.map((payment) => `
-            <div class="history-item">
-              <div class="history-head">
-                <span class="plan-name">${payment.plan}</span>
-                <span class="plan-price">${payment.price}</span>
-              </div>
-              <div class="history-meta">
-                Метод: ${payment.method}<br>
-                Дата: ${payment.date}<br>
-                Статус: ${payment.status}
-              </div>
-            </div>
-          `).join("")
-          : `<div class="small-text">Платежей пока нет</div>`}
-      </div>
+      <button class="back-btn" id="backHomeFromDevices" type="button">Назад на главную</button>
     </section>
   `;
 
@@ -323,14 +266,15 @@ function renderProfile() {
       showToast(`Инструкция для ${device.name}`);
     });
   });
+
+  document.getElementById("backHomeFromDevices").addEventListener("click", () => {
+    hapticLight();
+    navigate("home");
+  });
 }
 
 function navigate(screen) {
   state.currentScreen = screen;
-
-  document.querySelectorAll(".nav-btn").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.screen === screen);
-  });
 
   switch (screen) {
     case "home":
@@ -339,8 +283,8 @@ function navigate(screen) {
     case "plans":
       renderPlans();
       break;
-    case "profile":
-      renderProfile();
+    case "devices":
+      renderDevices();
       break;
     default:
       renderHome();
@@ -372,21 +316,9 @@ function simulatePayment() {
   confirmPaymentBtn.textContent = "Обработка...";
 
   setTimeout(() => {
-    const now = new Date();
-
-    const payment = {
-      plan: plan.name,
-      price: plan.price,
-      method: state.selectedPaymentMethod,
-      date: now.toLocaleString("ru-RU"),
-      status: "Успешно"
-    };
-
-    state.payments.unshift(payment);
     state.subscription.active = true;
     state.subscription.plan = plan.name;
-    state.subscription.daysLeft = plan.days;
-    state.subscription.expiresAt = now;
+    state.subscription.daysLeft += plan.days;
 
     updateStatusBar();
     closePayment();
@@ -394,17 +326,10 @@ function simulatePayment() {
     confirmPaymentBtn.textContent = "Оплатить";
 
     hapticSuccess();
-    showToast(`Оплата прошла: ${plan.name}`);
-    navigate("profile");
+    showToast(`Добавлено ${plan.days} дней`);
+    navigate("home");
   }, 1200);
 }
-
-document.querySelectorAll(".nav-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    hapticSelection();
-    navigate(btn.dataset.screen);
-  });
-});
 
 document.querySelectorAll(".payment-method").forEach((btn) => {
   btn.addEventListener("click", () => {
