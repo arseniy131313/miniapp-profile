@@ -5,109 +5,461 @@ if (tg) {
   tg.expand();
 }
 
-const avatarEl = document.getElementById("avatar");
-const nameEl = document.getElementById("name");
-const usernameEl = document.getElementById("username");
-const vpnStatusEl = document.getElementById("vpnStatus");
-const currentPlanEl = document.getElementById("currentPlan");
-const daysLeftEl = document.getElementById("daysLeft");
-const summaryPlanEl = document.getElementById("summaryPlan");
-const summaryPriceEl = document.getElementById("summaryPrice");
-const subscriptionInfoEl = document.getElementById("subscriptionInfo");
-const buyBtn = document.getElementById("buyBtn");
-const planCards = document.querySelectorAll(".plan-card");
-const statusDot = document.querySelector(".dot");
-
-let selectedPlan = {
-  name: "1 месяц",
-  price: "199₽",
-  days: "30"
+const state = {
+  currentScreen: "home",
+  selectedPlan: null,
+  selectedPaymentMethod: "ЮKassa",
+  user: {
+    name: "Пользователь",
+    username: "@username",
+    avatar: "https://via.placeholder.com/80"
+  },
+  subscription: {
+    active: false,
+    plan: null,
+    daysLeft: 0,
+    expiresAt: null
+  },
+  plans: [
+    { id: 1, name: "1 месяц", price: "199₽", days: 30, description: "Для знакомства" },
+    { id: 2, name: "3 месяца", price: "499₽", days: 90, description: "Выгодный старт" },
+    { id: 3, name: "12 месяцев", price: "1490₽", days: 365, description: "Лучшее предложение" }
+  ],
+  servers: [
+    { id: 1, name: "Germany #1", country: "Германия", ping: "42 ms", status: "Онлайн" },
+    { id: 2, name: "Netherlands #1", country: "Нидерланды", ping: "48 ms", status: "Онлайн" },
+    { id: 3, name: "Poland #1", country: "Польша", ping: "36 ms", status: "Онлайн" },
+    { id: 4, name: "USA #1", country: "США", ping: "96 ms", status: "Онлайн" },
+    { id: 5, name: "Turkey #1", country: "Турция", ping: "71 ms", status: "Онлайн" },
+    { id: 6, name: "Finland #1", country: "Финляндия", ping: "39 ms", status: "Онлайн" }
+  ],
+  keys: [
+    { id: 1, name: "WireGuard ключ", type: "WireGuard", meta: "Готов к подключению" },
+    { id: 2, name: "Outline ключ", type: "Outline", meta: "Можно скопировать в 1 тап" },
+    { id: 3, name: "OpenVPN конфиг", type: "OpenVPN", meta: "Скачать .ovpn" }
+  ],
+  payments: []
 };
 
-// Подтягиваем данные Telegram-пользователя
-const user = tg?.initDataUnsafe?.user;
+const appContent = document.getElementById("appContent");
+const userAvatar = document.getElementById("userAvatar");
+const userName = document.getElementById("userName");
+const userUsername = document.getElementById("userUsername");
+const statusText = document.getElementById("statusText");
+const statusDot = document.getElementById("statusDot");
 
-if (user) {
-  const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
-  nameEl.textContent = fullName || "Пользователь";
-  usernameEl.textContent = user.username ? `@${user.username}` : `id${user.id}`;
+const paymentModal = document.getElementById("paymentModal");
+const paymentBackdrop = document.getElementById("paymentBackdrop");
+const closePaymentModal = document.getElementById("closePaymentModal");
+const modalPlanName = document.getElementById("modalPlanName");
+const modalPlanPrice = document.getElementById("modalPlanPrice");
+const confirmPaymentBtn = document.getElementById("confirmPaymentBtn");
+const toast = document.getElementById("toast");
 
-  if (user.photo_url) {
-    avatarEl.src = user.photo_url;
-  }
-}
-
-// Haptic helper
-function lightHaptic() {
+function hapticLight() {
   tg?.HapticFeedback?.impactOccurred("light");
 }
 
-function selectHaptic() {
+function hapticSelection() {
   tg?.HapticFeedback?.selectionChanged();
 }
 
-function successHaptic() {
+function hapticSuccess() {
   tg?.HapticFeedback?.notificationOccurred("success");
 }
 
-function updateSummary() {
-  summaryPlanEl.textContent = selectedPlan.name;
-  summaryPriceEl.textContent = selectedPlan.price;
+function setTelegramUser() {
+  const user = tg?.initDataUnsafe?.user;
+
+  if (user) {
+    const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+    state.user.name = fullName || "Пользователь";
+    state.user.username = user.username ? `@${user.username}` : `id${user.id}`;
+    if (user.photo_url) {
+      state.user.avatar = user.photo_url;
+    }
+  }
+
+  userAvatar.src = state.user.avatar;
+  userName.textContent = state.user.name;
+  userUsername.textContent = state.user.username;
 }
 
-planCards.forEach(card => {
-  card.addEventListener("click", () => {
-    planCards.forEach(c => c.classList.remove("active"));
-    card.classList.add("active");
+function updateStatusBar() {
+  if (state.subscription.active) {
+    statusText.textContent = "VPN активен";
+    statusDot.style.background = "#22c55e";
+    statusDot.style.boxShadow = "0 0 10px rgba(34,197,94,0.7)";
+  } else {
+    statusText.textContent = "VPN не активен";
+    statusDot.style.background = "#ef4444";
+    statusDot.style.boxShadow = "0 0 10px rgba(239,68,68,0.7)";
+  }
+}
 
-    selectedPlan = {
-      name: card.dataset.plan,
-      price: card.dataset.price,
-      days: card.dataset.days
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 1800);
+}
+
+function formatSubscriptionText() {
+  if (!state.subscription.active) {
+    return "Нет активной подписки";
+  }
+
+  return `${state.subscription.plan} · ${state.subscription.daysLeft} дней`;
+}
+
+function renderHome() {
+  const activePlanText = formatSubscriptionText();
+
+  appContent.innerHTML = `
+    <section class="card fade-in">
+      <div class="section-title">
+        <div>
+          <h2>Главная</h2>
+          <p>Ваш VPN в одном Mini App</p>
+        </div>
+        <span class="badge">${state.subscription.active ? "Активен" : "Не активен"}</span>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="label">Подписка</div>
+          <div class="value">${state.subscription.active ? state.subscription.plan : "Нет"}</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Осталось</div>
+          <div class="value">${state.subscription.daysLeft} дн.</div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="primary-btn" id="goToPlansBtn">Купить VPN</button>
+        <button class="secondary-btn" id="goToServersBtn">Серверы</button>
+      </div>
+    </section>
+
+    <section class="card fade-in delay-1">
+      <h3>Моя подписка</h3>
+      <div class="kv">
+        <span>Статус</span>
+        <strong>${state.subscription.active ? "Активна" : "Неактивна"}</strong>
+      </div>
+      <div class="kv">
+        <span>План</span>
+        <strong>${activePlanText}</strong>
+      </div>
+      <div class="kv">
+        <span>Серверов</span>
+        <strong>${state.servers.length}</strong>
+      </div>
+    </section>
+
+    <section class="card fade-in delay-1">
+      <h3>Преимущества</h3>
+      <div class="small-text">⚡ Быстрое подключение · 🔒 Защищённый трафик · 🌍 Доступ к нескольким странам</div>
+    </section>
+  `;
+
+  document.getElementById("goToPlansBtn").addEventListener("click", () => {
+    hapticLight();
+    navigate("plans");
+  });
+
+  document.getElementById("goToServersBtn").addEventListener("click", () => {
+    hapticLight();
+    navigate("servers");
+  });
+}
+
+function renderPlans() {
+  if (!state.selectedPlan) {
+    state.selectedPlan = state.plans[0];
+  }
+
+  appContent.innerHTML = `
+    <section class="card fade-in">
+      <div class="section-title">
+        <div>
+          <h2>Тарифы</h2>
+          <p>Выберите план для покупки</p>
+        </div>
+      </div>
+
+      <div class="plan-list">
+        ${state.plans.map(plan => `
+          <button class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""}" data-plan-id="${plan.id}">
+            <div class="plan-head">
+              <span class="plan-name">${plan.name}</span>
+              <span class="plan-price">${plan.price}</span>
+            </div>
+            <div class="plan-desc">${plan.description} · ${plan.days} дней</div>
+          </button>
+        `).join("")}
+      </div>
+
+      <div class="action-row">
+        <button class="primary-btn" id="openPaymentBtn">Перейти к оплате</button>
+      </div>
+    </section>
+  `;
+
+  document.querySelectorAll(".plan-card").forEach(btn => {
+    btn.addEventListener("click", () => {
+      hapticSelection();
+      const id = Number(btn.dataset.planId);
+      state.selectedPlan = state.plans.find(p => p.id === id);
+      renderPlans();
+    });
+  });
+
+  document.getElementById("openPaymentBtn").addEventListener("click", () => {
+    hapticLight();
+    openPaymentModal();
+  });
+}
+
+function renderServers() {
+  appContent.innerHTML = `
+    <section class="card fade-in">
+      <div class="section-title">
+        <div>
+          <h2>Серверы</h2>
+          <p>Выберите сервер для подключения</p>
+        </div>
+        <span class="badge">${state.servers.length} шт.</span>
+      </div>
+
+      <div class="server-list">
+        ${state.servers.map(server => `
+          <div class="server-card">
+            <div class="server-head">
+              <span class="server-name">${server.name}</span>
+              <span class="server-country">${server.country}</span>
+            </div>
+            <div class="server-meta">Ping: ${server.ping}</div>
+            <div class="action-row">
+              <span class="server-status">${server.status}</span>
+              <button class="secondary-btn connect-server-btn" data-server-id="${server.id}">Подключиться</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="card fade-in delay-1">
+      <h3>Мои ключи</h3>
+      <div class="key-list">
+        ${state.keys.map(key => `
+          <div class="key-card">
+            <div class="key-head">
+              <span class="key-name">${key.name}</span>
+              <span class="key-type">${key.type}</span>
+            </div>
+            <div class="key-meta">${key.meta}</div>
+            <div class="action-row">
+              <button class="secondary-btn copy-key-btn" data-key-id="${key.id}">Скопировать</button>
+              <button class="primary-btn download-key-btn" data-key-id="${key.id}">Скачать</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+
+  document.querySelectorAll(".connect-server-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      hapticLight();
+      const serverId = Number(btn.dataset.serverId);
+      const server = state.servers.find(s => s.id === serverId);
+      showToast(`Подключение к ${server.name}`);
+    });
+  });
+
+  document.querySelectorAll(".copy-key-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      hapticLight();
+      const keyId = Number(btn.dataset.keyId);
+      const key = state.keys.find(k => k.id === keyId);
+      const fakeKey = `${key.type.toLowerCase()}://demo-key-${key.id}-123456`;
+
+      try {
+        await navigator.clipboard.writeText(fakeKey);
+        showToast(`${key.type} ключ скопирован`);
+      } catch {
+        showToast("Не удалось скопировать ключ");
+      }
+    });
+  });
+
+  document.querySelectorAll(".download-key-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      hapticLight();
+      const keyId = Number(btn.dataset.keyId);
+      const key = state.keys.find(k => k.id === keyId);
+      showToast(`Скачивание: ${key.name}`);
+    });
+  });
+}
+
+function renderProfile() {
+  appContent.innerHTML = `
+    <section class="card fade-in">
+      <div class="section-title">
+        <div>
+          <h2>Профиль</h2>
+          <p>Данные пользователя и история платежей</p>
+        </div>
+      </div>
+
+      <div class="kv">
+        <span>Имя</span>
+        <strong>${state.user.name}</strong>
+      </div>
+      <div class="kv">
+        <span>Username</span>
+        <strong>${state.user.username}</strong>
+      </div>
+      <div class="kv">
+        <span>Подписка</span>
+        <strong>${formatSubscriptionText()}</strong>
+      </div>
+    </section>
+
+    <section class="card fade-in delay-1">
+      <div class="section-title">
+        <div>
+          <h3>История платежей</h3>
+          <p>${state.payments.length ? "Последние операции" : "Пока пусто"}</p>
+        </div>
+      </div>
+
+      <div class="history-list">
+        ${state.payments.length ? state.payments.map(payment => `
+          <div class="history-item">
+            <div class="history-head">
+              <span class="plan-name">${payment.plan}</span>
+              <span class="plan-price">${payment.price}</span>
+            </div>
+            <div class="history-meta">
+              Метод: ${payment.method}<br>
+              Дата: ${payment.date}<br>
+              Статус: ${payment.status}
+            </div>
+          </div>
+        `).join("") : `<div class="small-text">Платежей пока нет</div>`}
+      </div>
+    </section>
+  `;
+}
+
+function navigate(screen) {
+  state.currentScreen = screen;
+
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.screen === screen);
+  });
+
+  switch (screen) {
+    case "home":
+      renderHome();
+      break;
+    case "plans":
+      renderPlans();
+      break;
+    case "servers":
+      renderServers();
+      break;
+    case "profile":
+      renderProfile();
+      break;
+    default:
+      renderHome();
+  }
+}
+
+function openPaymentModal() {
+  if (!state.selectedPlan) {
+    state.selectedPlan = state.plans[0];
+  }
+
+  modalPlanName.textContent = state.selectedPlan.name;
+  modalPlanPrice.textContent = state.selectedPlan.price;
+  paymentModal.classList.remove("hidden");
+
+  document.querySelectorAll(".payment-method").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.method === state.selectedPaymentMethod);
+  });
+}
+
+function closePayment() {
+  paymentModal.classList.add("hidden");
+}
+
+function simulatePayment() {
+  const plan = state.selectedPlan;
+
+  confirmPaymentBtn.disabled = true;
+  confirmPaymentBtn.textContent = "Обработка...";
+
+  setTimeout(() => {
+    const now = new Date();
+    const payment = {
+      plan: plan.name,
+      price: plan.price,
+      method: state.selectedPaymentMethod,
+      date: now.toLocaleString("ru-RU"),
+      status: "Успешно"
     };
 
-    updateSummary();
-    selectHaptic();
+    state.payments.unshift(payment);
+    state.subscription.active = true;
+    state.subscription.plan = plan.name;
+    state.subscription.daysLeft = plan.days;
+    state.subscription.expiresAt = now;
+
+    updateStatusBar();
+    closePayment();
+    confirmPaymentBtn.disabled = false;
+    confirmPaymentBtn.textContent = "Оплатить";
+    hapticSuccess();
+    showToast(`Оплата прошла: ${plan.name}`);
+
+    navigate("profile");
+  }, 1200);
+}
+
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    hapticSelection();
+    navigate(btn.dataset.screen);
   });
 });
 
-buyBtn.addEventListener("click", () => {
-  lightHaptic();
-
-  buyBtn.disabled = true;
-  buyBtn.textContent = "Обработка...";
-  buyBtn.style.opacity = "0.85";
-
-  setTimeout(() => {
-    currentPlanEl.textContent = selectedPlan.name;
-    daysLeftEl.textContent = `${selectedPlan.days} дней`;
-    vpnStatusEl.textContent = "VPN активен";
-    subscriptionInfoEl.className = "subscription-active";
-    subscriptionInfoEl.innerHTML = `
-      <strong>Подписка активирована</strong><br>
-      Тариф: ${selectedPlan.name}<br>
-      Стоимость: ${selectedPlan.price}<br>
-      Срок: ${selectedPlan.days} дней
-    `;
-
-    statusDot.style.background = "#22c55e";
-    statusDot.style.boxShadow = "0 0 10px rgba(34, 197, 94, 0.7)";
-
-    buyBtn.textContent = "Куплено";
-    buyBtn.style.background = "linear-gradient(135deg, #16a34a, #22c55e)";
-    buyBtn.disabled = false;
-    buyBtn.style.opacity = "1";
-
-    successHaptic();
-
-    // Если захочешь отправить данные в бота:
-    // tg?.sendData(JSON.stringify({
-    //   action: "buy_plan",
-    //   plan: selectedPlan.name,
-    //   price: selectedPlan.price,
-    //   days: selectedPlan.days
-    // }));
-  }, 1200);
+document.querySelectorAll(".payment-method").forEach(btn => {
+  btn.addEventListener("click", () => {
+    hapticSelection();
+    state.selectedPaymentMethod = btn.dataset.method;
+    document.querySelectorAll(".payment-method").forEach(item => {
+      item.classList.toggle("active", item.dataset.method === state.selectedPaymentMethod);
+    });
+  });
 });
 
-updateSummary();
+paymentBackdrop.addEventListener("click", closePayment);
+closePaymentModal.addEventListener("click", closePayment);
+
+confirmPaymentBtn.addEventListener("click", () => {
+  hapticLight();
+  simulatePayment();
+});
+
+setTelegramUser();
+updateStatusBar();
+state.selectedPlan = state.plans[0];
+navigate("home");
