@@ -17,6 +17,7 @@ const devices = [
 const state = {
   currentScreen: "home",
   selectedPlan: null,
+  selectedDeviceCount: 1,
   selectedPaymentMethod: "ЮKassa",
   user: {
     name: "Пользователь",
@@ -26,27 +27,29 @@ const state = {
   subscription: {
     active: false,
     plan: null,
-    daysLeft: 0
+    daysLeft: 0,
+    devices: 0,
+    traffic: "Безлимит"
   },
   plans: [
     {
       id: 1,
       name: "1 месяц",
-      price: "199₽",
+      basePrice: 199,
       days: 30,
       description: "Для знакомства"
     },
     {
       id: 2,
       name: "3 месяца",
-      price: "499₽",
+      basePrice: 499,
       days: 90,
       description: "Выгодный старт"
     },
     {
       id: 3,
       name: "12 месяцев",
-      price: "1490₽",
+      basePrice: 1490,
       days: 365,
       description: "Лучшее предложение"
     }
@@ -65,6 +68,7 @@ const paymentBackdrop = document.getElementById("paymentBackdrop");
 const closePaymentModal = document.getElementById("closePaymentModal");
 const modalPlanName = document.getElementById("modalPlanName");
 const modalPlanPrice = document.getElementById("modalPlanPrice");
+const modalDeviceCount = document.getElementById("modalDeviceCount");
 const confirmPaymentBtn = document.getElementById("confirmPaymentBtn");
 const toast = document.getElementById("toast");
 
@@ -78,6 +82,14 @@ function hapticSelection() {
 
 function hapticSuccess() {
   tg?.HapticFeedback?.notificationOccurred("success");
+}
+
+function formatRubles(value) {
+  return `${value}₽`;
+}
+
+function getPlanTotalPrice(plan) {
+  return plan.basePrice * state.selectedDeviceCount;
 }
 
 function setTelegramUser() {
@@ -119,12 +131,8 @@ function showToast(message) {
   }, 1800);
 }
 
-function getSubscriptionTitle() {
-  if (!state.subscription.active) {
-    return "Нет подписки";
-  }
-
-  return state.subscription.plan || "Активна";
+function getStatusTitle() {
+  return state.subscription.active ? "Активен" : "Не активен";
 }
 
 function renderHome() {
@@ -132,12 +140,20 @@ function renderHome() {
     <section class="card fade-in">
       <div class="stats-row">
         <div class="stat-box">
-          <div class="label">Подписка</div>
-          <div class="value">${getSubscriptionTitle()}</div>
+          <div class="label">Статус</div>
+          <div class="value">${getStatusTitle()}</div>
         </div>
         <div class="stat-box">
           <div class="label">Осталось</div>
           <div class="value">${state.subscription.daysLeft} дн.</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Трафик</div>
+          <div class="value">${state.subscription.traffic}</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Количество устройств</div>
+          <div class="value">${state.subscription.devices}</div>
         </div>
       </div>
 
@@ -150,9 +166,9 @@ function renderHome() {
     <section class="card fade-in delay-1">
       <h3>Как это работает</h3>
       <div class="small-text">
-        Сначала пользователь выбирает тариф и оплачивает подписку.
+        Сначала пользователь выбирает тариф, количество устройств и оплачивает подписку.
         После этого можно открыть инструкции для нужного устройства и подключить VPN.
-        При покупке нового тарифа оставшиеся дни не пропадают, а прибавляются.
+        При покупке нового тарифа оставшиеся дни складываются с уже активными.
       </div>
     </section>
   `;
@@ -168,6 +184,18 @@ function renderHome() {
   });
 }
 
+function refreshPlanPrices() {
+  document.querySelectorAll(".plan-card").forEach((card) => {
+    const planId = Number(card.dataset.planId);
+    const plan = state.plans.find((p) => p.id === planId);
+    const priceEl = card.querySelector(".plan-price");
+
+    if (priceEl) {
+      priceEl.textContent = formatRubles(getPlanTotalPrice(plan));
+    }
+  });
+}
+
 function renderPlans() {
   if (!state.selectedPlan) {
     state.selectedPlan = state.plans[0];
@@ -178,7 +206,22 @@ function renderPlans() {
       <div class="section-title">
         <div>
           <h2>Тарифы</h2>
-          <p>Выберите план для покупки</p>
+          <p>Выберите план и количество устройств</p>
+        </div>
+      </div>
+
+      <div class="device-count-block">
+        <div class="device-count-title">Количество устройств</div>
+        <div class="device-count-grid">
+          ${[1, 2, 3, 4, 5, 6].map((count) => `
+            <button
+              class="device-count-btn ${state.selectedDeviceCount === count ? "active" : ""}"
+              data-device-count="${count}"
+              type="button"
+            >
+              ${count}
+            </button>
+          `).join("")}
         </div>
       </div>
 
@@ -191,7 +234,7 @@ function renderPlans() {
           >
             <div class="plan-head">
               <span class="plan-name">${plan.name}</span>
-              <span class="plan-price">${plan.price}</span>
+              <span class="plan-price">${formatRubles(getPlanTotalPrice(plan))}</span>
             </div>
             <div class="plan-desc">${plan.description} · ${plan.days} дней</div>
           </button>
@@ -207,6 +250,7 @@ function renderPlans() {
   `;
 
   const planButtons = document.querySelectorAll(".plan-card");
+  const deviceButtons = document.querySelectorAll(".device-count-btn");
 
   planButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -219,6 +263,20 @@ function renderPlans() {
 
       planButtons.forEach((item) => item.classList.remove("active"));
       btn.classList.add("active");
+    });
+  });
+
+  deviceButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      hapticSelection();
+
+      const count = Number(btn.dataset.deviceCount);
+      state.selectedDeviceCount = count;
+
+      deviceButtons.forEach((item) => item.classList.remove("active"));
+      btn.classList.add("active");
+
+      refreshPlanPrices();
     });
   });
 
@@ -296,7 +354,8 @@ function openPaymentModal() {
   }
 
   modalPlanName.textContent = state.selectedPlan.name;
-  modalPlanPrice.textContent = state.selectedPlan.price;
+  modalDeviceCount.textContent = String(state.selectedDeviceCount);
+  modalPlanPrice.textContent = formatRubles(getPlanTotalPrice(state.selectedPlan));
   paymentModal.classList.remove("hidden");
 
   document.querySelectorAll(".payment-method").forEach((btn) => {
@@ -318,6 +377,7 @@ function simulatePayment() {
     state.subscription.active = true;
     state.subscription.plan = plan.name;
     state.subscription.daysLeft += plan.days;
+    state.subscription.devices = Math.max(state.subscription.devices, state.selectedDeviceCount);
 
     updateStatusBar();
     closePayment();
@@ -325,7 +385,7 @@ function simulatePayment() {
     confirmPaymentBtn.textContent = "Оплатить";
 
     hapticSuccess();
-    showToast(`Добавлено ${plan.days} дней`);
+    showToast(`Добавлено ${plan.days} дней · ${state.selectedDeviceCount} устр.`);
     navigate("home");
   }, 1200);
 }
