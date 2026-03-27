@@ -5,6 +5,15 @@ if (tg) {
   tg.expand();
 }
 
+const devices = [
+  { id: "ios", icon: "", name: "iOS", subtitle: "iPhone / iPad" },
+  { id: "android", icon: "🤖", name: "Android", subtitle: "Телефон / планшет" },
+  { id: "windows", icon: "🪟", name: "Windows", subtitle: "ПК / ноутбук" },
+  { id: "macos", icon: "💻", name: "macOS", subtitle: "MacBook / iMac" },
+  { id: "linux", icon: "🐧", name: "Linux", subtitle: "Desktop / server" },
+  { id: "smarttv", icon: "📺", name: "SmartTV", subtitle: "Телевизор / приставка" }
+];
+
 const state = {
   currentScreen: "home",
   selectedPlan: null,
@@ -41,26 +50,6 @@ const state = {
       price: "1490₽",
       days: 365,
       description: "Лучшее предложение"
-    }
-  ],
-  keys: [
-    {
-      id: 1,
-      name: "WireGuard ключ",
-      type: "WireGuard",
-      meta: "Готов к подключению"
-    },
-    {
-      id: 2,
-      name: "Outline ключ",
-      type: "Outline",
-      meta: "Можно скопировать в 1 тап"
-    },
-    {
-      id: 3,
-      name: "OpenVPN конфиг",
-      type: "OpenVPN",
-      meta: "Получение конфигурации"
     }
   ],
   payments: []
@@ -147,10 +136,8 @@ function renderHome() {
     <section class="card fade-in">
       <div class="section-title">
         <div>
-          <h2>Главная</h2>
-          <p>Управление подпиской и быстрый доступ к VPN</p>
+          <p>Управление подпиской</p>
         </div>
-        <span class="badge">${state.subscription.active ? "Активен" : "Не активен"}</span>
       </div>
 
       <div class="stats-row">
@@ -284,24 +271,18 @@ function renderProfile() {
     <section class="card fade-in delay-1">
       <div class="section-title">
         <div>
-          <h3>Доступ к VPN</h3>
-          <p>Подключение через внешний клиент</p>
+          <h3>Устройства подключения</h3>
+          <p>Выбери устройство для получения инструкции</p>
         </div>
       </div>
 
-      <div class="key-list">
-        ${state.keys.map((key) => `
-          <div class="key-card">
-            <div class="key-head">
-              <span class="key-name">${key.name}</span>
-              <span class="key-type">${key.type}</span>
-            </div>
-            <div class="key-meta">${key.meta}</div>
-            <div class="action-row">
-              <button class="secondary-btn copy-key-btn" data-key-id="${key.id}" type="button">Скопировать</button>
-              <button class="primary-btn download-key-btn" data-key-id="${key.id}" type="button">Получить</button>
-            </div>
-          </div>
+      <div class="device-grid">
+        ${devices.map((device) => `
+          <button class="device-card device-btn" data-device-id="${device.id}" type="button">
+            <div class="device-icon">${device.icon}</div>
+            <div class="device-name">${device.name}</div>
+            <div class="device-subtitle">${device.subtitle}</div>
+          </button>
         `).join("")}
       </div>
     </section>
@@ -334,29 +315,12 @@ function renderProfile() {
     </section>
   `;
 
-  document.querySelectorAll(".copy-key-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      hapticLight();
-
-      const keyId = Number(btn.dataset.keyId);
-      const key = state.keys.find((k) => k.id === keyId);
-      const fakeKey = `${key.type.toLowerCase()}://demo-key-${key.id}-123456`;
-
-      try {
-        await navigator.clipboard.writeText(fakeKey);
-        showToast(`${key.type} ключ скопирован`);
-      } catch {
-        showToast("Не удалось скопировать ключ");
-      }
-    });
-  });
-
-  document.querySelectorAll(".download-key-btn").forEach((btn) => {
+  document.querySelectorAll(".device-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       hapticLight();
-      const keyId = Number(btn.dataset.keyId);
-      const key = state.keys.find((k) => k.id === keyId);
-      showToast(`Выдача доступа: ${key.name}`);
+      const deviceId = btn.dataset.deviceId;
+      const device = devices.find((d) => d.id === deviceId);
+      showToast(`Инструкция для ${device.name}`);
     });
   });
 }
