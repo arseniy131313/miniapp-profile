@@ -3,32 +3,121 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Профиль</title>
-
-  <!-- Telegram Mini App SDK -->
+  <title>VPN Mini App</title>
   <script src="https://telegram.org/js/telegram-web-app.js?61"></script>
-
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
   <div class="app">
-    <div class="profile-card">
-      <img
-        id="avatar"
-        class="avatar"
-        src="https://via.placeholder.com/100"
-        alt="avatar"
-      />
-
-      <h1 id="name">Имя пользователя</h1>
-      <p id="username">@username</p>
-      <p class="status">Статус: <span id="statusText">Онлайн</span></p>
-
-      <div class="actions">
-        <button id="mainBtn" class="btn">Нажми меня</button>
-        <button id="changeStatusBtn" class="btn secondary">Сменить статус</button>
+    <header class="header fade-up">
+      <div class="profile">
+        <img id="avatar" class="avatar" src="https://via.placeholder.com/100" alt="avatar" />
+        <div class="profile-info">
+          <h1 id="name">Arseniy</h1>
+          <p id="username">@username</p>
+          <div class="status-line">
+            <span class="dot"></span>
+            <span id="vpnStatus">VPN не активирован</span>
+          </div>
+        </div>
       </div>
-    </div>
+    </header>
+
+    <section class="balance-card fade-up delay-1">
+      <div>
+        <p class="label">Текущий план</p>
+        <h2 id="currentPlan">Нет подписки</h2>
+      </div>
+      <div class="badge" id="daysLeft">0 дней</div>
+    </section>
+
+    <section class="plans fade-up delay-2">
+      <div class="section-title">
+        <h3>Выберите тариф</h3>
+        <p>Безлимитный трафик · Высокая скорость · 6 серверов</p>
+      </div>
+
+      <div class="plan-grid">
+        <button class="plan-card active" data-plan="1 месяц" data-price="199₽" data-days="30">
+          <div class="plan-top">
+            <span class="plan-name">1 месяц</span>
+            <span class="plan-price">199₽</span>
+          </div>
+          <p>Для знакомства</p>
+        </button>
+
+        <button class="plan-card" data-plan="3 месяца" data-price="499₽" data-days="90">
+          <div class="plan-top">
+            <span class="plan-name">3 месяца</span>
+            <span class="plan-price">499₽</span>
+          </div>
+          <p>Выгодный старт</p>
+        </button>
+
+        <button class="plan-card premium" data-plan="12 месяцев" data-price="1490₽" data-days="365">
+          <div class="plan-top">
+            <span class="plan-name">12 месяцев</span>
+            <span class="plan-price">1490₽</span>
+          </div>
+          <p>Лучшее предложение</p>
+        </button>
+      </div>
+    </section>
+
+    <section class="summary-card fade-up delay-3">
+      <div class="summary-row">
+        <span>Тариф</span>
+        <strong id="summaryPlan">1 месяц</strong>
+      </div>
+      <div class="summary-row">
+        <span>Стоимость</span>
+        <strong id="summaryPrice">199₽</strong>
+      </div>
+      <div class="summary-row">
+        <span>Доступ</span>
+        <strong id="summaryServers">6 серверов</strong>
+      </div>
+
+      <button id="buyBtn" class="buy-btn">
+        Купить VPN
+      </button>
+    </section>
+
+    <section class="features fade-up delay-4">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div>
+          <h4>Быстрое подключение</h4>
+          <p>Подключение в один тап через Telegram</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div>
+          <h4>Безопасность</h4>
+          <p>Шифрование и защита трафика</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <div>
+          <h4>6 серверов</h4>
+          <p>Разные страны для стабильного доступа</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="subscription-card fade-up delay-5">
+      <h3>Моя подписка</h3>
+      <div id="subscriptionInfo" class="subscription-empty">
+        У вас пока нет активной подписки
+      </div>
+    </section>
   </div>
 
   <script src="app.js"></script>
