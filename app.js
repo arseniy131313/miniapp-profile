@@ -1,31 +1,8 @@
 const tg = window.Telegram?.WebApp;
 
-function applyTelegramViewportOffset() {
-  const isExpanded = tg?.isExpanded;
-  const stableHeight = tg?.viewportStableHeight;
-  const innerHeight = window.innerHeight;
-
-  let offset = 20;
-
-  if (isExpanded && stableHeight && innerHeight) {
-    const diff = Math.max(0, innerHeight - stableHeight);
-
-    if (diff > 80) {
-      offset = 8;
-    } else if (diff > 40) {
-      offset = 14;
-    } else {
-      offset = 20;
-    }
-  }
-
-  document.documentElement.style.setProperty("--tg-top-offset", `${offset}px`);
-}
-
 if (tg) {
   tg.ready();
   tg.expand();
-  applyTelegramViewportOffset();
 }
 
 const MAX_DEVICES = 10;
@@ -339,7 +316,7 @@ function refreshPlanPrices() {
           ? `${state.subscription.deviceLimit} + ${added} = ${total} устр.`
           : `${total} устр. без изменений`;
       } else {
-        noteEl.textContent = `за ${state.selectedDeviceCount} устр.`;
+      noteEl.textContent = `за ${state.selectedDeviceCount} устр.`;
       }
     }
   });
@@ -454,13 +431,13 @@ function renderPlans() {
           <div class="count-menu hidden" id="countMenu">
             <div class="count-options-grid">
               ${countOptions.map((count) => `
-                <button
-                  class="count-option ${state.selectedDeviceCount === count ? "active" : ""}"
-                  data-device-count="${count}"
-                  type="button"
-                >
-                  ${count}
-                </button>
+                  <button
+                    class="count-option ${state.selectedDeviceCount === count ? "active" : ""}"
+                    data-device-count="${count}"
+                    type="button"
+                  >
+                    ${count}
+                  </button>
               `).join("")}
             </div>
           </div>
@@ -700,9 +677,9 @@ function simulatePayment() {
       state.subscription.plan = plan.name;
       state.subscription.deviceLimit = getSelectedTotalDeviceCount();
     } else {
-      state.subscription.active = true;
-      state.subscription.plan = plan.name;
-      state.subscription.daysLeft += plan.days;
+    state.subscription.active = true;
+    state.subscription.plan = plan.name;
+    state.subscription.daysLeft += plan.days;
       state.subscription.deviceLimit = state.selectedDeviceCount;
     }
 
@@ -716,7 +693,7 @@ function simulatePayment() {
     if (state.subscription.active && isRenewMode()) {
       showToast(`Продлено на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
     } else {
-      showToast(`Добавлено ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
+    showToast(`Добавлено ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
     }
 
     navigate("home");
@@ -752,12 +729,6 @@ confirmPaymentBtn?.addEventListener("click", () => {
   hapticLight();
   simulatePayment();
 });
-
-window.addEventListener("resize", applyTelegramViewportOffset);
-
-if (tg?.onEvent) {
-  tg.onEvent("viewportChanged", applyTelegramViewportOffset);
-}
 
 setTelegramUser();
 updateStatusBar();
