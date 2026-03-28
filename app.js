@@ -185,36 +185,6 @@ function getDeviceUsageLabel() {
   return `1/${state.subscription.deviceLimit} активно`;
 }
 
-function getBenefitCardsMarkup() {
-  return `
-    <div class="benefits-grid">
-      <div class="benefit-card blue">
-        <div class="benefit-icon">⚡</div>
-        <div class="benefit-title">Быстрое подключение</div>
-        <div class="benefit-text">Открытие нужной инструкции для устройства прямо внутри миниаппы без лишних переходов.</div>
-      </div>
-
-      <div class="benefit-card violet">
-        <div class="benefit-icon">🛡️</div>
-        <div class="benefit-title">Удобное управление</div>
-        <div class="benefit-text">Покупка, продление, выбор тарифа и в будущем контроль локаций — всё из одного интерфейса.</div>
-      </div>
-
-      <div class="benefit-card green">
-        <div class="benefit-icon">📶</div>
-        <div class="benefit-title">Контроль нагрузки</div>
-        <div class="benefit-text">Будущий мониторинг поможет видеть состояние локаций и выбирать более свободные серверы.</div>
-      </div>
-
-      <div class="benefit-card gold">
-        <div class="benefit-icon">✨</div>
-        <div class="benefit-title">Задел под масштабирование</div>
-        <div class="benefit-text">Структура уже готовится под реальный backend, оплату, выдачу конфигов и серверную статистику.</div>
-      </div>
-    </div>
-  `;
-}
-
 function renderHome() {
   const hasSubscription = state.subscription.active;
 
@@ -261,25 +231,6 @@ function renderHome() {
           При нажатии на кнопку <strong>Мониторинг</strong> будет открываться экран со списком VPN-локаций.
           Для каждой локации можно будет показывать загрузку по подключениям, свободный лимит и цветовую шкалу:
           от зелёного при низкой нагрузке до красного при высокой.
-        </div>
-      </div>
-    </section>
-
-    <section class="card fade-in delay-1">
-      <div class="section-title">
-        <div>
-          <h3>Чем сервис лучше обычных решений</h3>
-          <p>Не просто выдача VPN, а удобный сервис с понятным управлением внутри Telegram.</p>
-        </div>
-      </div>
-
-      ${getBenefitCardsMarkup()}
-
-      <div class="premium-banner">
-        <div class="premium-banner-title">Премиальный сценарий внутри Telegram</div>
-        <div class="premium-banner-text">
-          Пользователь сможет выбрать тариф, продлить доступ, открыть инструкцию для любого устройства
-          и затем посмотреть состояние доступных локаций в отдельном разделе.
         </div>
       </div>
     </section>
