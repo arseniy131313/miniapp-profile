@@ -31,8 +31,7 @@ const state = {
     plan: null,
     daysLeft: 0,
     deviceLimit: 0,
-    traffic: "Безлимит",
-    connectedDeviceIds: []
+    traffic: "Безлимит"
   },
   plans: [
     {
@@ -127,22 +126,6 @@ function getPlanSavingsPercent(plan) {
   return Math.max(0, Math.round((diff / regularPrice) * 100));
 }
 
-function getConnectedDevicesCount() {
-  return state.subscription.connectedDeviceIds.length;
-}
-
-function getDeviceUsageLabel() {
-  if (!state.subscription.deviceLimit) {
-    return "0/0 активно";
-  }
-
-  return `${getConnectedDevicesCount()}/${state.subscription.deviceLimit} активно`;
-}
-
-function getRemainingSlots() {
-  return Math.max(0, state.subscription.deviceLimit - getConnectedDevicesCount());
-}
-
 function setTelegramUser() {
   const user = tg?.initDataUnsafe?.user;
 
@@ -163,7 +146,7 @@ function setTelegramUser() {
 
 function updateStatusBar() {
   if (state.subscription.active) {
-    statusText.textContent = `VPN активен · ${state.subscription.daysLeft} дн.`;
+    statusText.textContent = "VPN активен";
     statusDot.style.background = "#22c55e";
     statusDot.style.boxShadow = "0 0 10px rgba(34, 197, 94, 0.7)";
   } else {
@@ -188,10 +171,18 @@ function getStatusTitle() {
 
 function getStatusSubvalue() {
   if (!state.subscription.active) {
-    return "После оплаты доступ откроется сразу";
+    return "Доступ откроется после оплаты";
   }
 
-  return `${state.subscription.plan || "Подписка"}`;
+  return state.subscription.plan || "Подписка активна";
+}
+
+function getDeviceUsageLabel() {
+  if (!state.subscription.deviceLimit) {
+    return "0/0 активно";
+  }
+
+  return `1/${state.subscription.deviceLimit} активно`;
 }
 
 function getBenefitCardsMarkup() {
@@ -200,25 +191,25 @@ function getBenefitCardsMarkup() {
       <div class="benefit-card blue">
         <div class="benefit-icon">⚡</div>
         <div class="benefit-title">Быстрое подключение</div>
-        <div class="benefit-text">Открытие конфигов и активация устройств в пару касаний прямо из миниаппы.</div>
+        <div class="benefit-text">Открытие нужной инструкции для устройства прямо внутри миниаппы без лишних переходов.</div>
       </div>
 
       <div class="benefit-card violet">
         <div class="benefit-icon">🛡️</div>
-        <div class="benefit-title">Стабильность и приватность</div>
-        <div class="benefit-text">Акцент на стабильных серверах, понятном управлении подпиской и аккуратной выдаче доступов.</div>
+        <div class="benefit-title">Удобное управление</div>
+        <div class="benefit-text">Покупка, продление, выбор тарифа и в будущем контроль локаций — всё из одного интерфейса.</div>
       </div>
 
       <div class="benefit-card green">
         <div class="benefit-icon">📶</div>
-        <div class="benefit-title">Устройства под контролем</div>
-        <div class="benefit-text">Будет легко видеть лимит устройств, активные подключения и продлевать подписку без лишних шагов.</div>
+        <div class="benefit-title">Контроль нагрузки</div>
+        <div class="benefit-text">Будущий мониторинг поможет видеть состояние локаций и выбирать более свободные серверы.</div>
       </div>
 
       <div class="benefit-card gold">
         <div class="benefit-icon">✨</div>
-        <div class="benefit-title">Сделано с заделом</div>
-        <div class="benefit-text">Текущая логика уже подготовлена под подключение реального бэкенда, серверов и биллинга.</div>
+        <div class="benefit-title">Задел под масштабирование</div>
+        <div class="benefit-text">Структура уже готовится под реальный backend, оплату, выдачу конфигов и серверную статистику.</div>
       </div>
     </div>
   `;
@@ -226,8 +217,6 @@ function getBenefitCardsMarkup() {
 
 function renderHome() {
   const hasSubscription = state.subscription.active;
-  const connectedCount = getConnectedDevicesCount();
-  const deviceLimit = state.subscription.deviceLimit;
 
   appContent.innerHTML = `
     <section class="card fade-in">
@@ -241,19 +230,19 @@ function renderHome() {
         <div class="stat-box highlight">
           <div class="label">Осталось</div>
           <div class="value">${state.subscription.daysLeft} дн.</div>
-          <div class="subvalue">${hasSubscription ? "Продление складывается сверху" : "Срок появится после оплаты"}</div>
+          <div class="subvalue">${hasSubscription ? "Продление прибавляет дни сверху" : "Срок появится после оплаты"}</div>
         </div>
 
         <div class="stat-box">
           <div class="label">Трафик</div>
           <div class="value compact">${state.subscription.traffic}</div>
-          <div class="subvalue">Без урезания по скорости в интерфейсе</div>
+          <div class="subvalue">Параметр можно будет получать с backend</div>
         </div>
 
         <div class="stat-box highlight">
           <div class="label">Устройства</div>
-          <div class="value compact">${deviceLimit ? `${connectedCount}/${deviceLimit} активно` : "0/0 активно"}</div>
-          <div class="subvalue">${deviceLimit ? `${getRemainingSlots()} свободно для активации` : "Выберите лимит на тарифах"}</div>
+          <div class="value compact">${state.subscription.deviceLimit ? getDeviceUsageLabel() : "0/0 активно"}</div>
+          <div class="subvalue">${state.subscription.deviceLimit ? "Лимит определяется тарифом" : "Выберите лимит на тарифах"}</div>
         </div>
       </div>
 
@@ -263,14 +252,15 @@ function renderHome() {
       </div>
 
       <div class="mini-action-row">
-        <button class="ghost-btn" id="renewSubscriptionBtn" type="button">Продлить подписку</button>
+        <button class="ghost-btn" id="goToMonitoringBtn" type="button">Мониторинг</button>
       </div>
 
       <div class="hero-note">
-        <div class="hero-note-title"><span class="spark">✦</span> Будущая логика уже предусмотрена</div>
+        <div class="hero-note-title"><span class="spark">✦</span> Что будет в разделе Мониторинг</div>
         <div class="hero-note-text">
-          Структура состояния готова под реальные ответы API: статус подписки, лимит устройств, активные подключения,
-          продление, биллинг и инструкции по платформам.
+          При нажатии на кнопку <strong>Мониторинг</strong> будет открываться экран со списком VPN-локаций.
+          Для каждой локации можно будет показывать загрузку по подключениям, свободный лимит и цветовую шкалу:
+          от зелёного при низкой нагрузке до красного при высокой.
         </div>
       </div>
     </section>
@@ -278,8 +268,8 @@ function renderHome() {
     <section class="card fade-in delay-1">
       <div class="section-title">
         <div>
-          <h3>Почему сервис выглядит сильнее других</h3>
-          <p>Не просто «подключить VPN», а удобный сервис с нормальным управлением.</p>
+          <h3>Чем сервис лучше обычных решений</h3>
+          <p>Не просто выдача VPN, а удобный сервис с понятным управлением внутри Telegram.</p>
         </div>
       </div>
 
@@ -288,7 +278,8 @@ function renderHome() {
       <div class="premium-banner">
         <div class="premium-banner-title">Премиальный сценарий внутри Telegram</div>
         <div class="premium-banner-text">
-          Акцент на минимуме действий: выбрал тариф, задал лимит устройств, оплатил, активировал устройства и позже продлил доступ из того же экрана.
+          Пользователь сможет выбрать тариф, продлить доступ, открыть инструкцию для любого устройства
+          и затем посмотреть состояние доступных локаций в отдельном разделе.
         </div>
       </div>
     </section>
@@ -304,9 +295,9 @@ function renderHome() {
     navigate("devices");
   });
 
-  document.getElementById("renewSubscriptionBtn").addEventListener("click", () => {
+  document.getElementById("goToMonitoringBtn").addEventListener("click", () => {
     hapticLight();
-    navigate("plans");
+    navigate("monitoring");
   });
 }
 
@@ -327,9 +318,14 @@ function refreshPlanPrices() {
     const planId = Number(card.dataset.planId);
     const plan = state.plans.find((item) => item.id === planId);
     const priceEl = card.querySelector(".plan-price");
+    const noteEl = card.querySelector(".plan-price-note");
 
     if (priceEl && plan) {
       priceEl.textContent = formatRubles(getPlanTotalPrice(plan));
+    }
+
+    if (noteEl) {
+      noteEl.textContent = `за ${state.selectedDeviceCount} устр.`;
     }
   });
 }
@@ -412,7 +408,7 @@ function renderPlans() {
       <div class="section-title">
         <div>
           <h2>Тарифы</h2>
-          <p>Выберите срок и лимит устройств. Проценты сразу показывают выгоду относительно месячной подписки.</p>
+          <p>Выберите срок и лимит устройств. Выгода считается относительно месячного тарифа.</p>
         </div>
       </div>
 
@@ -511,95 +507,24 @@ function renderPlans() {
   });
 }
 
-function getDeviceStatus(deviceId) {
-  if (!state.subscription.active) {
-    return {
-      text: "Нужна подписка",
-      className: "inactive"
-    };
-  }
-
-  if (state.subscription.connectedDeviceIds.includes(deviceId)) {
-    return {
-      text: "Подключено",
-      className: "connected"
-    };
-  }
-
-  if (getConnectedDevicesCount() < state.subscription.deviceLimit) {
-    return {
-      text: "Доступно",
-      className: "available"
-    };
-  }
-
-  return {
-    text: "Лимит достигнут",
-    className: "locked"
-  };
-}
-
-function toggleDeviceConnection(deviceId) {
-  if (!state.subscription.active) {
-    return "inactive";
-  }
-
-  const alreadyConnected = state.subscription.connectedDeviceIds.includes(deviceId);
-
-  if (alreadyConnected) {
-    state.subscription.connectedDeviceIds = state.subscription.connectedDeviceIds.filter((id) => id !== deviceId);
-    return "disconnected";
-  }
-
-  if (getConnectedDevicesCount() >= state.subscription.deviceLimit) {
-    return "limit";
-  }
-
-  state.subscription.connectedDeviceIds = [...state.subscription.connectedDeviceIds, deviceId];
-  return "connected";
-}
-
 function renderDevices() {
   appContent.innerHTML = `
     <section class="card fade-in">
       <div class="section-title">
         <div>
           <h2>Подключение</h2>
-          <p>Здесь позже можно будет открывать реальные конфиги и инструкции по платформам.</p>
-        </div>
-      </div>
-
-      <div class="device-overview">
-        <div class="device-overview-top">
-          <div class="device-overview-title">Устройства в работе</div>
-          <div class="usage-pill">${getDeviceUsageLabel()}</div>
-        </div>
-        <div class="small-text" style="margin-top: 8px;">
-          ${state.subscription.active
-            ? "Нажатие на карточку пока имитирует подключение или отключение устройства."
-            : "После активации подписки тут можно будет подключать устройства и видеть живой статус."}
+          <p>Выберите устройство и откройте инструкцию по настройке VPN.</p>
         </div>
       </div>
 
       <div class="device-grid">
-        ${devices.map((device) => {
-          const status = getDeviceStatus(device.id);
-          const isConnected = status.className === "connected";
-          const isLocked = status.className === "locked";
-
-          return `
-            <button
-              class="device-card device-btn ${isConnected ? "connected" : ""} ${isLocked ? "locked" : ""}"
-              data-device-id="${device.id}"
-              type="button"
-            >
-              <div class="device-icon">${device.icon}</div>
-              <div class="device-name">${device.name}</div>
-              <div class="device-subtitle">${device.subtitle}</div>
-              <span class="device-status ${status.className}">${status.text}</span>
-            </button>
-          `;
-        }).join("")}
+        ${devices.map((device) => `
+          <button class="device-card device-btn" data-device-id="${device.id}" type="button">
+            <div class="device-icon">${device.icon}</div>
+            <div class="device-name">${device.name}</div>
+            <div class="device-subtitle">${device.subtitle}</div>
+          </button>
+        `).join("")}
       </div>
 
       <button class="back-btn" id="backHomeFromDevices" type="button">Назад на главную</button>
@@ -609,36 +534,61 @@ function renderDevices() {
   document.querySelectorAll(".device-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       hapticLight();
-
       const deviceId = btn.dataset.deviceId;
       const device = devices.find((item) => item.id === deviceId);
-      const action = toggleDeviceConnection(deviceId);
-
-      updateStatusBar();
-      renderDevices();
-
-      if (action === "inactive") {
-        showToast("Сначала активируйте подписку");
-        return;
-      }
-
-      if (action === "limit") {
-        showToast(`Достигнут лимит: ${state.subscription.deviceLimit} устройств`);
-        return;
-      }
-
-      if (action === "disconnected") {
-        showToast(`${device.name} отключено`);
-        return;
-      }
-
-      if (action === "connected") {
-        showToast(`${device.name} подключено`);
-      }
+      showToast(`Открыта инструкция для ${device.name}`);
     });
   });
 
   document.getElementById("backHomeFromDevices").addEventListener("click", () => {
+    hapticLight();
+    navigate("home");
+  });
+}
+
+function getMonitoringRow(title, percent, color) {
+  return `
+    <div class="stat-box" style="padding: 14px; margin-top: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px;">
+        <div style="font-weight:800; font-size:15px;">${title}</div>
+        <div style="color:#dbeafe; font-weight:700;">${percent}%</div>
+      </div>
+
+      <div style="height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden;">
+        <div style="width:${percent}%; height:100%; border-radius:999px; background:${color}; box-shadow:0 0 20px rgba(255,255,255,0.12);"></div>
+      </div>
+
+      <div style="margin-top:10px; color:var(--muted); font-size:13px; line-height:1.4;">
+        ${percent < 50 ? "Низкая нагрузка, локация выглядит свободной." : percent < 80 ? "Средняя нагрузка, подключение возможно." : "Высокая нагрузка, желательно выбрать другую локацию."}
+      </div>
+    </div>
+  `;
+}
+
+function renderMonitoring() {
+  appContent.innerHTML = `
+    <section class="card fade-in">
+      <div class="section-title">
+        <div>
+          <h2>Мониторинг</h2>
+          <p>Заготовка под будущий экран нагрузки по локациям и лимитам подключений.</p>
+        </div>
+      </div>
+
+      <div class="small-text" style="margin-top: 8px;">
+        Здесь позже можно будет выводить реальные данные с backend: список стран, доступность серверов,
+        процент заполненности и смену цвета индикатора от зелёного к красному.
+      </div>
+
+      ${getMonitoringRow("Germany", 28, "linear-gradient(90deg, #22c55e, #4ade80)")}
+      ${getMonitoringRow("Netherlands", 57, "linear-gradient(90deg, #f59e0b, #fbbf24)")}
+      ${getMonitoringRow("Poland", 84, "linear-gradient(90deg, #ef4444, #f87171)")}
+
+      <button class="back-btn" id="backHomeFromMonitoring" type="button">Назад на главную</button>
+    </section>
+  `;
+
+  document.getElementById("backHomeFromMonitoring").addEventListener("click", () => {
     hapticLight();
     navigate("home");
   });
@@ -657,6 +607,9 @@ function navigate(screen) {
     case "devices":
       renderDevices();
       break;
+    case "monitoring":
+      renderMonitoring();
+      break;
     default:
       renderHome();
   }
@@ -672,7 +625,11 @@ function openPaymentModal() {
   modalPlanName.textContent = state.selectedPlan.name;
   modalDeviceCount.textContent = String(state.selectedDeviceCount);
   modalPlanPrice.textContent = formatRubles(getPlanTotalPrice(state.selectedPlan));
-  modalPlanSave.textContent = savings > 0 ? `${savings}% к месячному` : "Базовый тариф";
+
+  if (modalPlanSave) {
+    modalPlanSave.textContent = savings > 0 ? `${savings}% к месячному` : "Базовый тариф";
+  }
+
   confirmPaymentBtn.textContent = state.subscription.active ? "Продлить" : "Оплатить";
   paymentModal.classList.remove("hidden");
 
@@ -683,12 +640,6 @@ function openPaymentModal() {
 
 function closePayment() {
   paymentModal.classList.add("hidden");
-}
-
-function ensureInitialConnectedDevice() {
-  if (!state.subscription.connectedDeviceIds.length && state.subscription.deviceLimit > 0) {
-    state.subscription.connectedDeviceIds = [devices[0].id];
-  }
 }
 
 function simulatePayment() {
@@ -703,7 +654,6 @@ function simulatePayment() {
     state.subscription.daysLeft += plan.days;
     state.subscription.deviceLimit = Math.max(state.subscription.deviceLimit, state.selectedDeviceCount);
 
-    ensureInitialConnectedDevice();
     updateStatusBar();
     closePayment();
     confirmPaymentBtn.disabled = false;
@@ -714,9 +664,6 @@ function simulatePayment() {
     navigate("home");
   }, 1200);
 }
-
-// TODO: при подключении реального бэкенда заменить эмуляцию оплаты на запрос к API.
-// TODO: connectedDeviceIds, deviceLimit, plan, daysLeft и traffic готовы для подстановки реальных данных.
 
 document.querySelectorAll(".payment-method").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -744,10 +691,10 @@ document.addEventListener("click", (event) => {
   }
 });
 
-paymentBackdrop.addEventListener("click", closePayment);
-closePaymentModal.addEventListener("click", closePayment);
+paymentBackdrop?.addEventListener("click", closePayment);
+closePaymentModal?.addEventListener("click", closePayment);
 
-confirmPaymentBtn.addEventListener("click", () => {
+confirmPaymentBtn?.addEventListener("click", () => {
   hapticLight();
   simulatePayment();
 });
