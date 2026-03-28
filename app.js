@@ -14,6 +14,8 @@ const devices = [
   { id: "smarttv", icon: "📺", name: "SmartTV", subtitle: "Телевизор / приставка" }
 ];
 
+const rubFormatter = new Intl.NumberFormat("ru-RU");
+
 const state = {
   currentScreen: "home",
   selectedPlan: null,
@@ -85,7 +87,7 @@ function hapticSuccess() {
 }
 
 function formatRubles(value) {
-  return `${value}₽`;
+  return `${rubFormatter.format(value)}₽`;
 }
 
 function getPlanTotalPrice(plan) {
@@ -158,7 +160,7 @@ function renderHome() {
       </div>
 
       <div class="action-row">
-        <button class="primary-btn" id="goToPlansBtn" type="button">Купить</button>
+        <button class="primary-btn glow-btn" id="goToPlansBtn" type="button">Купить</button>
         <button class="secondary-btn" id="goToDevicesBtn" type="button">Подключить</button>
       </div>
     </section>
@@ -184,15 +186,74 @@ function renderHome() {
   });
 }
 
+function updateCountUI() {
+  const triggerValue = document.getElementById("countValue");
+  if (triggerValue) {
+    triggerValue.textContent = String(state.selectedDeviceCount);
+  }
+
+  document.querySelectorAll(".count-option").forEach((btn) => {
+    btn.classList.toggle("active", Number(btn.dataset.deviceCount) === state.selectedDeviceCount);
+  });
+}
+
 function refreshPlanPrices() {
   document.querySelectorAll(".plan-card").forEach((card) => {
     const planId = Number(card.dataset.planId);
     const plan = state.plans.find((p) => p.id === planId);
     const priceEl = card.querySelector(".plan-price");
 
-    if (priceEl) {
+    if (priceEl && plan) {
       priceEl.textContent = formatRubles(getPlanTotalPrice(plan));
     }
+  });
+}
+
+function openCountMenu() {
+  const picker = document.getElementById("countPicker");
+  const menu = document.getElementById("countMenu");
+  if (!picker || !menu) return;
+
+  menu.classList.remove("hidden");
+  picker.classList.add("open");
+}
+
+function closeCountMenu() {
+  const picker = document.getElementById("countPicker");
+  const menu = document.getElementById("countMenu");
+  if (!picker || !menu) return;
+
+  menu.classList.add("hidden");
+  picker.classList.remove("open");
+}
+
+function bindCountPicker() {
+  const trigger = document.getElementById("countTrigger");
+  const options = document.querySelectorAll(".count-option");
+
+  if (trigger) {
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const menu = document.getElementById("countMenu");
+
+      if (menu?.classList.contains("hidden")) {
+        openCountMenu();
+      } else {
+        closeCountMenu();
+      }
+    });
+  }
+
+  options.forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      hapticSelection();
+
+      state.selectedDeviceCount = Number(btn.dataset.deviceCount);
+      updateCountUI();
+      refreshPlanPrices();
+      closeCountMenu();
+    });
   });
 }
 
@@ -212,16 +273,32 @@ function renderPlans() {
 
       <div class="device-count-block">
         <div class="device-count-title">Количество устройств</div>
-        <div class="device-count-grid">
-          ${[1, 2, 3, 4, 5, 6].map((count) => `
-            <button
-              class="device-count-btn ${state.selectedDeviceCount === count ? "active" : ""}"
-              data-device-count="${count}"
-              type="button"
-            >
-              ${count}
-            </button>
-          `).join("")}
+
+        <div class="count-picker" id="countPicker">
+          <button class="count-trigger" id="countTrigger" type="button">
+            <span class="count-trigger-label">Устройств</span>
+            <span class="count-trigger-value">
+              <strong id="countValue">${state.selectedDeviceCount}</strong>
+              <span class="count-chevron">▾</span>
+            </span>
+          </button>
+
+          <div class="count-menu hidden" id="countMenu">
+            <div class="count-options-grid">
+              ${Array.from({ length: 10 }, (_, index) => {
+                const count = index + 1;
+                return `
+                  <button
+                    class="count-option ${state.selectedDeviceCount === count ? "active" : ""}"
+                    data-device-count="${count}"
+                    type="button"
+                  >
+                    ${count}
+                  </button>
+                `;
+              }).join("")}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -242,7 +319,7 @@ function renderPlans() {
       </div>
 
       <div class="action-row">
-        <button class="primary-btn" id="openPaymentBtn" type="button">Перейти к оплате</button>
+        <button class="primary-btn glow-btn" id="openPaymentBtn" type="button">Перейти к оплате</button>
       </div>
 
       <button class="back-btn" id="backHomeFromPlans" type="button">Назад на главную</button>
@@ -250,7 +327,6 @@ function renderPlans() {
   `;
 
   const planButtons = document.querySelectorAll(".plan-card");
-  const deviceButtons = document.querySelectorAll(".device-count-btn");
 
   planButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -258,7 +334,6 @@ function renderPlans() {
 
       const id = Number(btn.dataset.planId);
       const plan = state.plans.find((p) => p.id === id);
-
       state.selectedPlan = plan;
 
       planButtons.forEach((item) => item.classList.remove("active"));
@@ -266,19 +341,7 @@ function renderPlans() {
     });
   });
 
-  deviceButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      hapticSelection();
-
-      const count = Number(btn.dataset.deviceCount);
-      state.selectedDeviceCount = count;
-
-      deviceButtons.forEach((item) => item.classList.remove("active"));
-      btn.classList.add("active");
-
-      refreshPlanPrices();
-    });
-  });
+  bindCountPicker();
 
   document.getElementById("openPaymentBtn").addEventListener("click", () => {
     hapticLight();
@@ -399,6 +462,17 @@ document.querySelectorAll(".payment-method").forEach((btn) => {
       item.classList.toggle("active", item.dataset.method === state.selectedPaymentMethod);
     });
   });
+});
+
+document.addEventListener("click", (event) => {
+  if (state.currentScreen !== "plans") return;
+
+  const picker = document.getElementById("countPicker");
+  if (!picker) return;
+
+  if (!picker.contains(event.target)) {
+    closeCountMenu();
+  }
 });
 
 paymentBackdrop.addEventListener("click", closePayment);
