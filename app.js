@@ -1,8 +1,31 @@
 const tg = window.Telegram?.WebApp;
 
+function applyTelegramViewportOffset() {
+  const isExpanded = tg?.isExpanded;
+  const stableHeight = tg?.viewportStableHeight;
+  const innerHeight = window.innerHeight;
+
+  let offset = 20;
+
+  if (isExpanded && stableHeight && innerHeight) {
+    const diff = Math.max(0, innerHeight - stableHeight);
+
+    if (diff > 80) {
+      offset = 8;
+    } else if (diff > 40) {
+      offset = 14;
+    } else {
+      offset = 20;
+    }
+  }
+
+  document.documentElement.style.setProperty("--tg-top-offset", `${offset}px`);
+}
+
 if (tg) {
   tg.ready();
   tg.expand();
+  applyTelegramViewportOffset();
 }
 
 const MAX_DEVICES = 10;
@@ -729,6 +752,12 @@ confirmPaymentBtn?.addEventListener("click", () => {
   hapticLight();
   simulatePayment();
 });
+
+window.addEventListener("resize", applyTelegramViewportOffset);
+
+if (tg?.onEvent) {
+  tg.onEvent("viewportChanged", applyTelegramViewportOffset);
+}
 
 setTelegramUser();
 updateStatusBar();
