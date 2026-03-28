@@ -254,7 +254,7 @@ function renderHome() {
       <div class="hero-note">
         <div class="hero-note-title"><span class="spark">✦</span> Что будет в разделе Мониторинг</div>
         <div class="hero-note-text">
-          При нажатии на кнопку <strong>Мониторинг</strong> открываться статуистика загруженности по локациям.
+          При нажатии на кнопку <strong>Мониторинг</strong> открываться статистика загруженности по локациям.
         </div>
       </div>
     </section>
