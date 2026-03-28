@@ -316,7 +316,7 @@ function refreshPlanPrices() {
           ? `${state.subscription.deviceLimit} + ${added} = ${total} устр.`
           : `${total} устр. без изменений`;
       } else {
-      noteEl.textContent = `за ${state.selectedDeviceCount} устр.`;
+        noteEl.textContent = `за ${state.selectedDeviceCount} устр.`;
       }
     }
   });
@@ -431,13 +431,13 @@ function renderPlans() {
           <div class="count-menu hidden" id="countMenu">
             <div class="count-options-grid">
               ${countOptions.map((count) => `
-                  <button
-                    class="count-option ${state.selectedDeviceCount === count ? "active" : ""}"
-                    data-device-count="${count}"
-                    type="button"
-                  >
-                    ${count}
-                  </button>
+                <button
+                  class="count-option ${state.selectedDeviceCount === count ? "active" : ""}"
+                  data-device-count="${count}"
+                  type="button"
+                >
+                  ${count}
+                </button>
               `).join("")}
             </div>
           </div>
@@ -677,9 +677,9 @@ function simulatePayment() {
       state.subscription.plan = plan.name;
       state.subscription.deviceLimit = getSelectedTotalDeviceCount();
     } else {
-    state.subscription.active = true;
-    state.subscription.plan = plan.name;
-    state.subscription.daysLeft += plan.days;
+      state.subscription.active = true;
+      state.subscription.plan = plan.name;
+      state.subscription.daysLeft += plan.days;
       state.subscription.deviceLimit = state.selectedDeviceCount;
     }
 
@@ -693,7 +693,7 @@ function simulatePayment() {
     if (state.subscription.active && isRenewMode()) {
       showToast(`Продлено на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
     } else {
-    showToast(`Добавлено ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
+      showToast(`Добавлено ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
     }
 
     navigate("home");

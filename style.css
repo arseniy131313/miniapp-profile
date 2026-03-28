@@ -110,7 +110,7 @@ body {
   z-index: 2;
   width: min(100%, 440px);
   margin: 0 auto;
-  padding: calc(env(safe-area-inset-top, 0px) + 95px) 14px 28px;
+  padding: calc(env(safe-area-inset-top, 0px) + 128px) 14px 28px;
 }
 
 .topbar {
@@ -754,6 +754,19 @@ body {
   line-height: 1.35;
 }
 
+.discount-row {
+  align-items: center;
+}
+
+.discount-value {
+  color: #9bddff;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(91, 140, 255, 0.24), rgba(124, 82, 255, 0.24));
+  border: 1px solid rgba(112, 183, 255, 0.22);
+  box-shadow: 0 0 16px rgba(91, 140, 255, 0.18);
+}
+
 .payment-methods {
   display: flex;
   flex-direction: column;
@@ -855,7 +868,6 @@ body {
 }
 
 @media (max-width: 420px) {
-  .benefits-grid,
   .stats-row,
   .device-grid {
     grid-template-columns: 1fr 1fr;
