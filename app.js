@@ -342,7 +342,7 @@ function getPlanBadgeMarkup(plan) {
     return `<span class="plan-badge base">Базовый тариф</span>`;
   }
 
-  const bestBadge = plan.months >= 12 ? `<span class="plan-badge best">Хит</span>` : "";
+  const bestBadge = plan.months >= 3 ? `<span class="plan-badge best">Хит</span>` : "";
   return `
     <span class="plan-badge discount">Выгоднее на ${savings}%</span>
     ${bestBadge}
