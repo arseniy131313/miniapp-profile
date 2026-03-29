@@ -112,6 +112,7 @@ const state = {
     active: false,
     plan: null,
     daysLeft: 0,
+    usedDevices: 0,
     deviceLimit: 0,
     traffic: "Безлимит"
   },
@@ -248,6 +249,13 @@ function getDeviceWord(count) {
 }
 
 function getCurrentDeviceLimit() {
+  const used = Number(state.subscription.usedDevices || 0);
+  const limit = Number(state.subscription.deviceLimit || 0);
+
+  if (limit <= 0) {
+    return 0;
+  }
+
   return Math.min(MAX_DEVICES, Math.max(1, state.subscription.deviceLimit || 1));
 }
 
@@ -338,6 +346,17 @@ function getDevicesOnlyPriceRuleText() {
   }
 
   return `Лимит не меняется, поэтому доплата не требуется. Срок подписки останется прежним.`;
+}
+
+function getUsedDeviceCount() {
+  const used = Number(state.subscription.usedDevices || 0);
+  const limit = Number(state.subscription.deviceLimit || 0);
+
+  if (limit <= 0) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(used, limit));
 }
 
 function getDevicesOnlyActionText() {
@@ -479,8 +498,12 @@ function renderHome() {
           <div class="hero-meta">
             <div class="metric-card">
               <div class="metric-label">Устройства</div>
-              <div class="metric-value">${hasSubscription ? state.subscription.deviceLimit : "До 10"}</div>
-              <div class="metric-subtext">${hasSubscription ? "Лимит по текущей подписке" : "Количество выбирается при оформлении"}</div>
+              <div class="metric-value">
+                ${hasSubscription ? `${getUsedDeviceCount()}/${state.subscription.deviceLimit}` : "0/10"}
+              </div>
+              <div class="metric-subtext">
+                ${hasSubscription ? "Используется / доступно" : "Подключено / максимум"}
+              </div>
             </div>
 
             <div class="metric-card">
@@ -960,6 +983,10 @@ function simulatePayment() {
   setTimeout(() => {
     if (isDevicesOnlyMode()) {
       state.subscription.deviceLimit = state.selectedDeviceCount;
+      state.subscription.usedDevices = Math.min(
+        state.subscription.usedDevices || 0,
+        state.subscription.deviceLimit
+      );
       updateStatusBar();
       closePayment();
       confirmPaymentBtn.disabled = false;
@@ -980,11 +1007,19 @@ function simulatePayment() {
       state.subscription.daysLeft += plan.days;
       state.subscription.plan = plan.name;
       state.subscription.deviceLimit = state.selectedDeviceCount;
+      state.subscription.usedDevices = Math.min(
+        state.subscription.usedDevices || 0,
+        state.subscription.deviceLimit
+      );
     } else {
       state.subscription.active = true;
       state.subscription.plan = plan.name;
       state.subscription.daysLeft += plan.days;
       state.subscription.deviceLimit = state.selectedDeviceCount;
+      state.subscription.usedDevices = Math.min(
+        state.subscription.usedDevices || 0,
+        state.subscription.deviceLimit
+      );
     }
 
     updateStatusBar();
