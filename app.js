@@ -8,12 +8,12 @@ if (tg) {
 const MAX_DEVICES = 10;
 
 const devices = [
-  { id: "ios", icon: "", name: "iOS", subtitle: "iPhone / iPad" },
-  { id: "android", icon: "🤖", name: "Android", subtitle: "Телефон / планшет" },
-  { id: "windows", icon: "🪟", name: "Windows", subtitle: "ПК / ноутбук" },
-  { id: "macos", icon: "💻", name: "macOS", subtitle: "MacBook / iMac" },
-  { id: "linux", icon: "🐧", name: "Linux", subtitle: "Desktop / server" },
-  { id: "smarttv", icon: "📺", name: "SmartTV", subtitle: "Телевизор / приставка" }
+  { id: "ios", badge: "iOS", name: "iPhone / iPad", subtitle: "Быстрое подключение для мобильных устройств Apple" },
+  { id: "android", badge: "Android", name: "Android", subtitle: "Телефон или планшет на Android" },
+  { id: "windows", badge: "Windows", name: "Windows", subtitle: "ПК и ноутбуки на Windows" },
+  { id: "macos", badge: "macOS", name: "macOS", subtitle: "MacBook, iMac и другие устройства Apple" },
+  { id: "linux", badge: "Linux", name: "Linux", subtitle: "Desktop и server-сценарии" },
+  { id: "smarttv", badge: "TV", name: "Smart TV", subtitle: "Телевизоры и медиаприставки" }
 ];
 
 const rubFormatter = new Intl.NumberFormat("ru-RU");
@@ -52,7 +52,7 @@ const state = {
       basePrice: 499,
       days: 90,
       months: 3,
-      description: "Уже заметно выгоднее"
+      description: "Оптимально по цене"
     },
     {
       id: 3,
@@ -61,7 +61,7 @@ const state = {
       basePrice: 890,
       days: 180,
       months: 6,
-      description: "Оптимальный баланс цены"
+      description: "Баланс экономии и срока"
     },
     {
       id: 4,
@@ -70,7 +70,7 @@ const state = {
       basePrice: 1490,
       days: 365,
       months: 12,
-      description: "Максимум выгоды на год"
+      description: "Максимально выгодно"
     }
   ]
 };
@@ -192,12 +192,12 @@ function showToast(message) {
 }
 
 function getStatusTitle() {
-  return state.subscription.active ? "Активен" : "Не активен";
+  return state.subscription.active ? "Защита включена" : "Ожидает активации";
 }
 
 function getStatusSubvalue() {
   if (!state.subscription.active) {
-    return "Доступ откроется после оплаты";
+    return "Оформите тариф и получите доступ сразу после оплаты";
   }
 
   return state.subscription.plan || "Подписка активна";
@@ -205,10 +205,10 @@ function getStatusSubvalue() {
 
 function getDeviceUsageLabel() {
   if (!state.subscription.deviceLimit) {
-    return "0/0 активно";
+    return "0 / 0";
   }
 
-  return `0/${state.subscription.deviceLimit} активно`;
+  return `0 / ${state.subscription.deviceLimit}`;
 }
 
 function renderHome() {
@@ -216,45 +216,47 @@ function renderHome() {
 
   appContent.innerHTML = `
     <section class="card fade-in">
-      <div class="stats-row">
-        <div class="stat-box ${hasSubscription ? "success" : "highlight"}">
-          <div class="label">Статус</div>
-          <div class="value">${getStatusTitle()}</div>
-          <div class="subvalue">${getStatusSubvalue()}</div>
+      <div class="home-stack">
+        <div class="hero-card">
+          <div class="hero-topline">
+            <div class="hero-chip ${hasSubscription ? "success" : "offline"}">
+              <span class="hero-chip-dot"></span>
+              ${hasSubscription ? "Активная подписка" : "Подписка неактивна"}
+            </div>
+            <div class="hero-accent">Secure access</div>
+          </div>
+
+          <h2 class="hero-title">${hasSubscription ? `${state.subscription.daysLeft} дней` : "VPN Premium"}</h2>
+          <div class="hero-subtext">${getStatusSubvalue()}</div>
+
+          <div class="hero-meta">
+            <div class="metric-card">
+              <div class="metric-label">Устройства</div>
+              <div class="metric-value">${hasSubscription ? getDeviceUsageLabel() : "До 10"}</div>
+              <div class="metric-subtext">${hasSubscription ? "Активно сейчас / лимит по тарифу" : "Выбираются на экране тарифа"}</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-label">Трафик</div>
+              <div class="metric-value compact">${state.subscription.traffic}</div>
+              <div class="metric-subtext">Без ограничений для пользователя</div>
+            </div>
+          </div>
         </div>
 
-        <div class="stat-box highlight">
-          <div class="label">Осталось</div>
-          <div class="value">${state.subscription.daysLeft} дн.</div>
-          <div class="subvalue">${hasSubscription ? "Продление прибавляет дни сверху" : "Срок появится после оплаты"}</div>
+        <div class="action-row">
+          <button class="primary-btn glow-btn" id="goToPlansBtn" type="button">${hasSubscription ? "Продлить" : "Купить"}</button>
+          <button class="secondary-btn" id="goToDevicesBtn" type="button">Подключить</button>
         </div>
 
-        <div class="stat-box">
-          <div class="label">Трафик</div>
-          <div class="value compact">${state.subscription.traffic}</div>
-          <div class="subvalue">Параметр можно будет получать с backend</div>
-        </div>
-
-        <div class="stat-box highlight">
-          <div class="label">Устройства</div>
-          <div class="value compact">${state.subscription.deviceLimit ? getDeviceUsageLabel() : "0/0 активно"}</div>
-          <div class="subvalue">${state.subscription.deviceLimit ? "Лимит определяется тарифом" : "Выберите лимит на тарифах"}</div>
-        </div>
-      </div>
-
-      <div class="action-row">
-        <button class="primary-btn glow-btn" id="goToPlansBtn" type="button">${hasSubscription ? "Продлить" : "Купить"}</button>
-        <button class="secondary-btn" id="goToDevicesBtn" type="button">Подключить</button>
-      </div>
-
-      <div class="mini-action-row">
-        <button class="ghost-btn" id="goToMonitoringBtn" type="button">Мониторинг</button>
-      </div>
-
-      <div class="hero-note">
-        <div class="hero-note-title"><span class="spark">✦</span> Что будет в разделе Мониторинг</div>
-        <div class="hero-note-text">
-          При нажатии на кнопку <strong>Мониторинг</strong> открываться статистика загруженности по локациям.
+        <div class="mini-action-row">
+          <button class="monitor-card" id="goToMonitoringBtn" type="button">
+            <div class="monitor-top">
+              <div class="monitor-title">Мониторинг серверов</div>
+              <div class="monitor-link">Открыть</div>
+            </div>
+            <div class="monitor-note">Проверяйте загруженность локаций и выбирайте наименее нагруженный сервер.</div>
+          </button>
         </div>
       </div>
     </section>
@@ -374,13 +376,13 @@ function getPlanBadgeMarkup(plan) {
   const savings = getPlanSavingsPercent(plan);
 
   if (savings <= 0) {
-    return `<span class="plan-badge base">Базовый тариф</span>`;
+    return `<span class="plan-badge base">Start</span>`;
   }
 
-  const bestBadge = plan.months === 3 ? `<span class="plan-badge best">Хит</span>` : "";
+  const bestBadge = plan.months === 6 ? `<span class="plan-badge best">Popular</span>` : "";
 
   return `
-    <span class="plan-badge discount">Выгоднее на ${savings}%</span>
+    <span class="plan-badge discount">Скидка ${savings}%</span>
     ${bestBadge}
   `;
 }
@@ -406,10 +408,11 @@ function renderPlans() {
     <section class="card fade-in">
       <div class="section-title">
         <div>
+          <div class="eyebrow">Plans</div>
           <h2>Тарифы</h2>
           <p>${renewMode
-            ? "Выберите срок продления. При необходимости можно добавить устройства до максимума 10."
-            : "Выберите срок и общее количество устройств. Выгода считается относительно месячного тарифа."}
+            ? "Выберите срок продления и при необходимости добавьте устройства до лимита 10."
+            : "Выберите срок подписки и общее количество устройств."}
           </p>
         </div>
       </div>
@@ -444,19 +447,15 @@ function renderPlans() {
         <div class="count-helper">
           ${renewMode
             ? (maxAddable > 0
-              ? `Сейчас у вас ${state.subscription.deviceLimit} из ${MAX_DEVICES} устройств. Можно добавить ещё до ${maxAddable}.`
-              : `У вас уже максимальный лимит — ${MAX_DEVICES} устройств.`)
-            : `На первой покупке выбирается общее количество устройств от 1 до ${MAX_DEVICES}.`}
+              ? `Сейчас доступно ${state.subscription.deviceLimit} устройств. Можно добавить ещё до ${maxAddable}.`
+              : `Уже выбран максимальный лимит — ${MAX_DEVICES} устройств.`)
+            : `На первой покупке можно выбрать от 1 до ${MAX_DEVICES} устройств.`}
         </div>
       </div>
 
       <div class="plan-list">
         ${state.plans.map((plan) => `
-          <button
-            class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""}"
-            data-plan-id="${plan.id}"
-            type="button"
-          >
+          <button class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""}" data-plan-id="${plan.id}" type="button">
             <div class="plan-topline">
               <div class="plan-badges">
                 ${getPlanBadgeMarkup(plan)}
@@ -484,13 +483,11 @@ function renderPlans() {
         `).join("")}
       </div>
 
-      <div class="action-row">
-        <button class="primary-btn glow-btn" id="openPaymentBtn" type="button">
-          ${renewMode ? "Продлить подписку" : "Перейти к оплате"}
-        </button>
+      <div class="action-row" style="margin-top:14px;">
+        <button class="primary-btn glow-btn" id="openPaymentBtn" type="button">${renewMode ? "Продлить подписку" : "Перейти к оплате"}</button>
       </div>
 
-      <button class="back-btn" id="backHomeFromPlans" type="button">Назад на главную</button>
+      <button class="back-btn" id="backHomeFromPlans" type="button" style="margin-top:14px;">Назад на главную</button>
     </section>
   `;
 
@@ -527,22 +524,23 @@ function renderDevices() {
     <section class="card fade-in">
       <div class="section-title">
         <div>
+          <div class="eyebrow">Setup</div>
           <h2>Подключение</h2>
-          <p>Выберите устройство и откройте инструкцию по настройке VPN.</p>
+          <p>Выберите платформу и откройте инструкцию по настройке VPN.</p>
         </div>
       </div>
 
       <div class="device-grid">
         ${devices.map((device) => `
           <button class="device-card device-btn" data-device-id="${device.id}" type="button">
-            <div class="device-icon">${device.icon}</div>
+            <div class="device-platform">${device.badge}</div>
             <div class="device-name">${device.name}</div>
             <div class="device-subtitle">${device.subtitle}</div>
           </button>
         `).join("")}
       </div>
 
-      <button class="back-btn" id="backHomeFromDevices" type="button">Назад на главную</button>
+      <button class="back-btn" id="backHomeFromDevices" type="button" style="margin-top:14px;">Назад на главную</button>
     </section>
   `;
 
@@ -561,21 +559,33 @@ function renderDevices() {
   });
 }
 
-function getMonitoringRow(title, percent, color) {
+function getMonitoringTone(percent) {
+  if (percent < 35) return "low";
+  if (percent < 65) return "mid";
+  if (percent < 85) return "high";
+  return "critical";
+}
+
+function getMonitoringMessage(percent) {
+  if (percent < 35) return "Низкая нагрузка, локация выглядит оптимально.";
+  if (percent < 65) return "Средняя нагрузка, подключение остаётся комфортным.";
+  if (percent < 85) return "Повышенная нагрузка, возможны пиковые задержки.";
+  return "Высокая нагрузка, лучше выбрать другую локацию.";
+}
+
+function getMonitoringRow(title, percent) {
+  const tone = getMonitoringTone(percent);
+
   return `
-    <div class="stat-box" style="padding: 14px; margin-top: 12px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px;">
-        <div style="font-weight:800; font-size:15px;">${title}</div>
-        <div style="color:#dbeafe; font-weight:700;">${percent}%</div>
+    <div class="monitoring-row">
+      <div class="monitoring-head">
+        <div class="monitoring-location">${title}</div>
+        <div class="monitoring-percent">${percent}%</div>
       </div>
-
-      <div style="height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden;">
-        <div style="width:${percent}%; height:100%; border-radius:999px; background:${color}; box-shadow:0 0 20px rgba(255,255,255,0.12);"></div>
+      <div class="progress-track">
+        <div class="progress-bar ${tone}" style="width:${percent}%;"></div>
       </div>
-
-      <div style="margin-top:10px; color:var(--muted); font-size:13px; line-height:1.4;">
-        ${percent < 50 ? "Низкая нагрузка, локация выглядит свободной." : percent < 80 ? "Средняя нагрузка, подключение возможно." : "Высокая нагрузка, желательно выбрать другую локацию."}
-      </div>
+      <div class="metric-subtext">${getMonitoringMessage(percent)}</div>
     </div>
   `;
 }
@@ -585,21 +595,19 @@ function renderMonitoring() {
     <section class="card fade-in">
       <div class="section-title">
         <div>
+          <div class="eyebrow">Status</div>
           <h2>Мониторинг</h2>
-          <p>Заготовка под будущий экран нагрузки по локациям и лимитам подключений.</p>
+          <p>Экран для будущих данных backend: загрузка, доступность и состояние локаций.</p>
         </div>
       </div>
 
-      <div class="small-text" style="margin-top: 8px;">
-        Здесь позже можно будет выводить реальные данные с backend: список стран, доступность серверов,
-        процент заполненности и смену цвета индикатора от зелёного к красному.
+      <div class="monitoring-list">
+        ${getMonitoringRow("Germany", 28)}
+        ${getMonitoringRow("Netherlands", 57)}
+        ${getMonitoringRow("Poland", 84)}
       </div>
 
-      ${getMonitoringRow("Germany", 28, "linear-gradient(90deg, #22c55e, #4ade80)")}
-      ${getMonitoringRow("Netherlands", 57, "linear-gradient(90deg, #f59e0b, #fbbf24)")}
-      ${getMonitoringRow("Poland", 84, "linear-gradient(90deg, #ef4444, #f87171)")}
-
-      <button class="back-btn" id="backHomeFromMonitoring" type="button">Назад на главную</button>
+      <button class="back-btn" id="backHomeFromMonitoring" type="button" style="margin-top:14px;">Назад на главную</button>
     </section>
   `;
 
@@ -665,12 +673,13 @@ function closePayment() {
 
 function simulatePayment() {
   const plan = state.selectedPlan;
+  const renew = isRenewMode();
 
   confirmPaymentBtn.disabled = true;
   confirmPaymentBtn.textContent = "Обработка...";
 
   setTimeout(() => {
-    if (isRenewMode()) {
+    if (renew) {
       state.subscription.daysLeft += plan.days;
       state.subscription.plan = plan.name;
       state.subscription.deviceLimit = getSelectedTotalDeviceCount();
@@ -684,14 +693,14 @@ function simulatePayment() {
     updateStatusBar();
     closePayment();
     confirmPaymentBtn.disabled = false;
-    confirmPaymentBtn.textContent = "Оплатить";
+    confirmPaymentBtn.textContent = renew ? "Продлить" : "Оплатить";
 
     hapticSuccess();
 
-    if (state.subscription.active && isRenewMode()) {
+    if (renew) {
       showToast(`Продлено на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
     } else {
-      showToast(`Добавлено ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
+      showToast(`Активировано на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
     }
 
     navigate("home");

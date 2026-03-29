@@ -8,25 +8,28 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="bg-base"></div>
   <div class="bg-grid"></div>
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
-  <div class="bg-orb orb-3"></div>
   <div class="bg-noise"></div>
 
   <div class="app-shell">
     <header class="topbar glass fade-in">
-      <div class="profile-mini">
-        <img id="userAvatar" class="avatar" src="https://via.placeholder.com/80" alt="avatar" />
-        <div class="profile-text">
-          <h1 id="userName">Пользователь</h1>
-          <p id="userUsername">@username</p>
+      <div class="topbar-row">
+        <div class="profile-mini">
+          <img id="userAvatar" class="avatar" src="https://via.placeholder.com/80" alt="avatar" />
+          <div class="profile-text">
+            <div class="eyebrow">Premium access</div>
+            <h1 id="userName">Пользователь</h1>
+            <p id="userUsername">@username</p>
+          </div>
         </div>
-      </div>
 
-      <div class="topbar-status">
-        <span class="status-dot" id="statusDot"></span>
-        <span id="statusText">VPN не активен</span>
+        <div class="status-pill">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">VPN не активен</span>
+        </div>
       </div>
     </header>
 
@@ -38,8 +41,11 @@
 
     <div class="modal-content glass">
       <div class="modal-header">
-        <h3>Оплата</h3>
-        <button id="closePaymentModal" class="icon-btn" type="button">✕</button>
+        <div>
+          <div class="eyebrow">Checkout</div>
+          <h3>Оплата</h3>
+        </div>
+        <button id="closePaymentModal" class="icon-btn" type="button" aria-label="Закрыть">✕</button>
       </div>
 
       <div class="modal-body">
@@ -56,7 +62,7 @@
             <span>Скидка</span>
             <strong id="modalPlanSave" class="discount-value">—</strong>
           </div>
-          <div class="summary-row">
+          <div class="summary-row total-row">
             <span>Сумма</span>
             <strong id="modalPlanPrice">—</strong>
           </div>
