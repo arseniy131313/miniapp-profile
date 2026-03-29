@@ -7,13 +7,92 @@ if (tg) {
 
 const MAX_DEVICES = 10;
 
+const iconSet = {
+  ios: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="7" y="2.8" width="10" height="18.4" rx="2.4"></rect>
+      <path d="M10 5.7h4"></path>
+      <circle cx="12" cy="17.8" r="0.7" fill="currentColor" stroke="none"></circle>
+    </svg>
+  `,
+  android: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 9h8a2 2 0 0 1 2 2v5.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2Z"></path>
+      <path d="M9 9l-1.2-2M15 9l1.2-2M9 5.8c.9-.6 1.9-.8 3-.8s2.1.2 3 .8"></path>
+      <circle cx="10" cy="12.2" r="0.6" fill="currentColor" stroke="none"></circle>
+      <circle cx="14" cy="12.2" r="0.6" fill="currentColor" stroke="none"></circle>
+    </svg>
+  `,
+  windows: `
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M3 5.2 10.5 4v7.6H3V5.2Zm8.6-1.4L21 2.4v9.2h-9.4V3.8ZM3 12.5h7.5v7.6L3 18.9v-6.4Zm8.6 0H21v9.2l-9.4-1.4v-7.8Z"></path>
+    </svg>
+  `,
+  macos: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="4" y="5" width="16" height="11" rx="2"></rect>
+      <path d="M8 19h8M10 16v3M14 16v3"></path>
+    </svg>
+  `,
+  linux: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 3c2 0 3.4 1.8 3.4 4.1 0 1-.3 2.1-.9 3l2 5.6c.5 1.5-.6 3.1-2.2 3.1h-4.6c-1.6 0-2.7-1.6-2.2-3.1l2-5.6c-.6-.9-.9-2-.9-3C8.6 4.8 10 3 12 3Z"></path>
+      <circle cx="10.6" cy="7.2" r="0.5" fill="currentColor" stroke="none"></circle>
+      <circle cx="13.4" cy="7.2" r="0.5" fill="currentColor" stroke="none"></circle>
+      <path d="M10.8 10.1c.4.3.8.4 1.2.4s.8-.1 1.2-.4"></path>
+    </svg>
+  `,
+  smarttv: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="11" rx="2"></rect>
+      <path d="M9 19h6M12 16v3"></path>
+    </svg>
+  `
+};
+
 const devices = [
-  { id: "ios", badge: "iOS", name: "iPhone / iPad", subtitle: "Быстрое подключение для мобильных устройств Apple" },
-  { id: "android", badge: "Android", name: "Android", subtitle: "Телефон или планшет на Android" },
-  { id: "windows", badge: "Windows", name: "Windows", subtitle: "ПК и ноутбуки на Windows" },
-  { id: "macos", badge: "macOS", name: "macOS", subtitle: "MacBook, iMac и другие устройства Apple" },
-  { id: "linux", badge: "Linux", name: "Linux", subtitle: "Desktop и server-сценарии" },
-  { id: "smarttv", badge: "TV", name: "Smart TV", subtitle: "Телевизоры и медиаприставки" }
+  {
+    id: "ios",
+    name: "iPhone / iPad",
+    subtitle: "Быстрое подключение для устройств Apple",
+    icon: iconSet.ios
+  },
+  {
+    id: "android",
+    name: "Android",
+    subtitle: "Смартфоны и планшеты на Android",
+    icon: iconSet.android
+  },
+  {
+    id: "windows",
+    name: "Windows",
+    subtitle: "ПК и ноутбуки на Windows",
+    icon: iconSet.windows
+  },
+  {
+    id: "macos",
+    name: "macOS",
+    subtitle: "MacBook, iMac и другие компьютеры Apple",
+    icon: iconSet.macos
+  },
+  {
+    id: "linux",
+    name: "Linux",
+    subtitle: "Подключение для desktop и server-сценариев",
+    icon: iconSet.linux
+  },
+  {
+    id: "smarttv",
+    name: "Smart TV",
+    subtitle: "Телевизоры и медиаприставки",
+    icon: iconSet.smarttv
+  }
+];
+
+const monitoringLocations = [
+  { name: "Германия", load: 28, latency: 39, availability: "99.99%" },
+  { name: "Нидерланды", load: 46, latency: 33, availability: "99.98%" },
+  { name: "Польша", load: 81, latency: 58, availability: "99.94%" }
 ];
 
 const rubFormatter = new Intl.NumberFormat("ru-RU");
@@ -52,7 +131,7 @@ const state = {
       basePrice: 499,
       days: 90,
       months: 3,
-      description: "Оптимально по цене"
+      description: "Комфортный старт"
     },
     {
       id: 3,
@@ -61,7 +140,7 @@ const state = {
       basePrice: 890,
       days: 180,
       months: 6,
-      description: "Баланс экономии и срока"
+      description: "Оптимальный баланс цены и срока"
     },
     {
       id: 4,
@@ -70,7 +149,7 @@ const state = {
       basePrice: 1490,
       days: 365,
       months: 12,
-      description: "Максимально выгодно"
+      description: "Максимальная экономия на долгий срок"
     }
   ]
 };
@@ -106,6 +185,11 @@ function hapticSuccess() {
 
 function formatRubles(value) {
   return `${rubFormatter.format(value)}₽`;
+}
+
+function formatPriceMarkup(value) {
+  const numeric = rubFormatter.format(value);
+  return `${numeric}<span class="price-ruble">₽</span>`;
 }
 
 function isRenewMode() {
@@ -152,6 +236,10 @@ function getPlanSavingsPercent(plan) {
   return Math.max(0, Math.round((diff / regularPrice) * 100));
 }
 
+function getPlanMonthlyPrice(plan) {
+  return Math.round(getPlanTotalPrice(plan) / plan.months);
+}
+
 function setTelegramUser() {
   const user = tg?.initDataUnsafe?.user;
 
@@ -191,10 +279,6 @@ function showToast(message) {
   }, 1800);
 }
 
-function getStatusTitle() {
-  return state.subscription.active ? "Защита включена" : "Ожидает активации";
-}
-
 function getStatusSubvalue() {
   if (!state.subscription.active) {
     return "Оформите тариф и получите доступ сразу после оплаты";
@@ -211,8 +295,13 @@ function getDeviceUsageLabel() {
   return `0 / ${state.subscription.deviceLimit}`;
 }
 
+function getBestLocation() {
+  return monitoringLocations.reduce((best, item) => item.load < best.load ? item : best, monitoringLocations[0]);
+}
+
 function renderHome() {
   const hasSubscription = state.subscription.active;
+  const bestLocation = getBestLocation();
 
   appContent.innerHTML = `
     <section class="card fade-in">
@@ -221,9 +310,9 @@ function renderHome() {
           <div class="hero-topline">
             <div class="hero-chip ${hasSubscription ? "success" : "offline"}">
               <span class="hero-chip-dot"></span>
-              ${hasSubscription ? "Активная подписка" : "Подписка неактивна"}
+              ${hasSubscription ? "Подписка активна" : "Ожидает активации"}
             </div>
-            <div class="hero-accent">Secure access</div>
+            <div class="hero-accent">Защищённое подключение</div>
           </div>
 
           <h2 class="hero-title">${hasSubscription ? `${state.subscription.daysLeft} дней` : "VPN Premium"}</h2>
@@ -233,7 +322,7 @@ function renderHome() {
             <div class="metric-card">
               <div class="metric-label">Устройства</div>
               <div class="metric-value">${hasSubscription ? getDeviceUsageLabel() : "До 10"}</div>
-              <div class="metric-subtext">${hasSubscription ? "Активно сейчас / лимит по тарифу" : "Выбираются на экране тарифа"}</div>
+              <div class="metric-subtext">${hasSubscription ? "Подключено сейчас / доступно по тарифу" : "Количество выбирается при оформлении"}</div>
             </div>
 
             <div class="metric-card">
@@ -252,10 +341,10 @@ function renderHome() {
         <div class="mini-action-row">
           <button class="monitor-card" id="goToMonitoringBtn" type="button">
             <div class="monitor-top">
-              <div class="monitor-title">Мониторинг серверов</div>
-              <div class="monitor-link">Открыть</div>
+              <div class="monitor-title">Мониторинг сети</div>
+              <div class="monitor-link">${bestLocation.name} · ${bestLocation.load}%</div>
             </div>
-            <div class="monitor-note">Проверяйте загруженность локаций и выбирайте наименее нагруженный сервер.</div>
+            <div class="monitor-note">Проверяйте загруженность локаций и выбирайте самый свободный сервер без лишних переходов.</div>
           </button>
         </div>
       </div>
@@ -268,7 +357,7 @@ function renderHome() {
     if (hasSubscription) {
       state.selectedDeviceCount = 0;
     } else {
-      state.selectedDeviceCount = 1;
+      state.selectedDeviceCount = Math.max(1, state.selectedDeviceCount);
     }
 
     navigate("plans");
@@ -303,9 +392,14 @@ function refreshPlanPrices() {
     const plan = state.plans.find((item) => item.id === planId);
     const priceEl = card.querySelector(".plan-price");
     const noteEl = card.querySelector(".plan-price-note");
+    const monthlyEl = card.querySelector(".plan-monthly");
 
     if (priceEl && plan) {
-      priceEl.textContent = formatRubles(getPlanTotalPrice(plan));
+      priceEl.innerHTML = formatPriceMarkup(getPlanTotalPrice(plan));
+    }
+
+    if (monthlyEl && plan) {
+      monthlyEl.textContent = `≈ ${formatRubles(getPlanMonthlyPrice(plan))} / мес.`;
     }
 
     if (noteEl) {
@@ -313,10 +407,10 @@ function refreshPlanPrices() {
         const total = getSelectedTotalDeviceCount();
         const added = state.selectedDeviceCount;
         noteEl.textContent = added > 0
-          ? `${state.subscription.deviceLimit} + ${added} = ${total} устр.`
-          : `${total} устр. без изменений`;
+          ? `${state.subscription.deviceLimit} + ${added} = ${total} устройств`
+          : `${total} устройств без изменений`;
       } else {
-        noteEl.textContent = `за ${state.selectedDeviceCount} устр.`;
+        noteEl.textContent = `за ${state.selectedDeviceCount} устройств`;
       }
     }
   });
@@ -375,21 +469,19 @@ function bindCountPicker() {
 function getPlanBadgeMarkup(plan) {
   const savings = getPlanSavingsPercent(plan);
 
-  if (savings <= 0) {
-    return `<span class="plan-badge base">Start</span>`;
+  if (plan.months === 1) {
+    return `<span class="plan-badge base">Старт</span>`;
   }
-
-  const bestBadge = plan.months === 6 ? `<span class="plan-badge best">Popular</span>` : "";
 
   return `
     <span class="plan-badge discount">Скидка ${savings}%</span>
-    ${bestBadge}
+    ${plan.months === 6 ? `<span class="plan-badge hit">Хит</span>` : ""}
   `;
 }
 
 function renderPlans() {
   if (!state.selectedPlan) {
-    state.selectedPlan = state.plans[0];
+    state.selectedPlan = state.plans.find((plan) => plan.months === 6) || state.plans[0];
   }
 
   const renewMode = isRenewMode();
@@ -408,7 +500,7 @@ function renderPlans() {
     <section class="card fade-in">
       <div class="section-title">
         <div>
-          <div class="eyebrow">Plans</div>
+          <div class="eyebrow">Выбор тарифа</div>
           <h2>Тарифы</h2>
           <p>${renewMode
             ? "Выберите срок продления и при необходимости добавьте устройства до лимита 10."
@@ -455,7 +547,7 @@ function renderPlans() {
 
       <div class="plan-list">
         ${state.plans.map((plan) => `
-          <button class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""}" data-plan-id="${plan.id}" type="button">
+          <button class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""} ${plan.months === 6 ? "hit-plan" : ""}" data-plan-id="${plan.id}" type="button">
             <div class="plan-topline">
               <div class="plan-badges">
                 ${getPlanBadgeMarkup(plan)}
@@ -468,15 +560,16 @@ function renderPlans() {
                 <div class="plan-desc">${plan.description} · ${plan.days} дней доступа</div>
               </div>
 
-              <div>
-                <div class="plan-price">${formatRubles(getPlanTotalPrice(plan))}</div>
+              <div class="plan-price-wrap">
+                <div class="plan-price">${formatPriceMarkup(getPlanTotalPrice(plan))}</div>
                 <div class="plan-price-note">
                   ${renewMode
                     ? (state.selectedDeviceCount > 0
-                      ? `${state.subscription.deviceLimit} + ${state.selectedDeviceCount} = ${getSelectedTotalDeviceCount()} устр.`
-                      : `${getSelectedTotalDeviceCount()} устр. без изменений`)
-                    : `за ${state.selectedDeviceCount} устр.`}
+                      ? `${state.subscription.deviceLimit} + ${state.selectedDeviceCount} = ${getSelectedTotalDeviceCount()} устройств`
+                      : `${getSelectedTotalDeviceCount()} устройств без изменений`)
+                    : `за ${state.selectedDeviceCount} устройств`}
                 </div>
+                <div class="plan-monthly">≈ ${formatRubles(getPlanMonthlyPrice(plan))} / мес.</div>
               </div>
             </div>
           </button>
@@ -524,16 +617,16 @@ function renderDevices() {
     <section class="card fade-in">
       <div class="section-title">
         <div>
-          <div class="eyebrow">Setup</div>
-          <h2>Подключение</h2>
-          <p>Выберите платформу и откройте инструкцию по настройке VPN.</p>
+          <div class="eyebrow">Инструкции</div>
+          <h2>Подключение устройств</h2>
+          <p>Выберите платформу и откройте инструкцию по настройке VPN без лишних повторяющихся названий.</p>
         </div>
       </div>
 
       <div class="device-grid">
         ${devices.map((device) => `
           <button class="device-card device-btn" data-device-id="${device.id}" type="button">
-            <div class="device-platform">${device.badge}</div>
+            <div class="device-icon-wrap">${device.icon}</div>
             <div class="device-name">${device.name}</div>
             <div class="device-subtitle">${device.subtitle}</div>
           </button>
@@ -566,45 +659,85 @@ function getMonitoringTone(percent) {
   return "critical";
 }
 
-function getMonitoringMessage(percent) {
-  if (percent < 35) return "Низкая нагрузка, локация выглядит оптимально.";
-  if (percent < 65) return "Средняя нагрузка, подключение остаётся комфортным.";
-  if (percent < 85) return "Повышенная нагрузка, возможны пиковые задержки.";
-  return "Высокая нагрузка, лучше выбрать другую локацию.";
+function getMonitoringLabel(percent) {
+  if (percent < 35) return "Свободно";
+  if (percent < 65) return "Стабильно";
+  if (percent < 85) return "Нагрузка";
+  return "Пик";
 }
 
-function getMonitoringRow(title, percent) {
-  const tone = getMonitoringTone(percent);
+function getMonitoringMessage(percent) {
+  if (percent < 35) return "Низкая нагрузка, локация подходит для подключения.";
+  if (percent < 65) return "Сервер работает стабильно и подходит для повседневного использования.";
+  if (percent < 85) return "Нагрузка повышена, в пиковые часы возможны небольшие задержки.";
+  return "Высокая нагрузка, лучше выбрать соседнюю локацию.";
+}
+
+function getMonitoringRow(location, isBest) {
+  const tone = getMonitoringTone(location.load);
 
   return `
     <div class="monitoring-row">
       <div class="monitoring-head">
-        <div class="monitoring-location">${title}</div>
-        <div class="monitoring-percent">${percent}%</div>
+        <div class="monitoring-location">${location.name}</div>
+        <div class="monitoring-percent">${location.load}%</div>
       </div>
+
+      <div class="monitoring-badges">
+        <span class="status-badge ${tone}">${getMonitoringLabel(location.load)}</span>
+        ${isBest ? `<span class="status-badge best">Рекомендуется</span>` : ""}
+      </div>
+
       <div class="progress-track">
-        <div class="progress-bar ${tone}" style="width:${percent}%;"></div>
+        <div class="progress-bar ${tone}" style="width:${location.load}%;"></div>
       </div>
-      <div class="metric-subtext">${getMonitoringMessage(percent)}</div>
+
+      <div class="monitoring-meta">
+        <span>Задержка: ${location.latency} мс</span>
+        <span>Доступность: ${location.availability}</span>
+      </div>
+
+      <div class="metric-subtext">${getMonitoringMessage(location.load)}</div>
     </div>
   `;
 }
 
 function renderMonitoring() {
+  const bestLocation = getBestLocation();
+  const averageLoad = Math.round(monitoringLocations.reduce((sum, item) => sum + item.load, 0) / monitoringLocations.length);
+
   appContent.innerHTML = `
     <section class="card fade-in">
       <div class="section-title">
         <div>
-          <div class="eyebrow">Status</div>
+          <div class="eyebrow">Состояние сети</div>
           <h2>Мониторинг</h2>
-          <p>Экран для будущих данных backend: загрузка, доступность и состояние локаций.</p>
+          <p>Экран выглядит чище и ближе к премиальному продукту: сразу видно лучшую локацию, нагрузку и стабильность сети.</p>
+        </div>
+      </div>
+
+      <div class="monitoring-summary">
+        <div class="monitoring-summary-card">
+          <div class="metric-label">Локаций</div>
+          <div class="monitoring-summary-value">${monitoringLocations.length}</div>
+          <div class="monitoring-summary-note">Доступно для выбора</div>
+        </div>
+
+        <div class="monitoring-summary-card">
+          <div class="metric-label">Средняя нагрузка</div>
+          <div class="monitoring-summary-value">${averageLoad}%</div>
+          <div class="monitoring-summary-note">По активным серверам</div>
+        </div>
+
+        <div class="monitoring-summary-card">
+          <div class="metric-label">Лучшая локация</div>
+          <div class="monitoring-summary-value">${bestLocation.name}</div>
+          <div class="monitoring-summary-note">Сейчас ${bestLocation.load}% нагрузки</div>
         </div>
       </div>
 
       <div class="monitoring-list">
-        ${getMonitoringRow("Germany", 28)}
-        ${getMonitoringRow("Netherlands", 57)}
-        ${getMonitoringRow("Poland", 84)}
+        ${monitoringLocations.map((item) => getMonitoringRow(item, item.name === bestLocation.name)).join("")}
       </div>
 
       <button class="back-btn" id="backHomeFromMonitoring" type="button" style="margin-top:14px;">Назад на главную</button>
@@ -640,7 +773,7 @@ function navigate(screen) {
 
 function openPaymentModal() {
   if (!state.selectedPlan) {
-    state.selectedPlan = state.plans[0];
+    state.selectedPlan = state.plans.find((plan) => plan.months === 3) || state.plans[0];
   }
 
   const savings = getPlanSavingsPercent(state.selectedPlan);
@@ -698,9 +831,9 @@ function simulatePayment() {
     hapticSuccess();
 
     if (renew) {
-      showToast(`Продлено на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
+      showToast(`Продлено на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устройств`);
     } else {
-      showToast(`Активировано на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устр.`);
+      showToast(`Активировано на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устройств`);
     }
 
     navigate("home");
@@ -739,5 +872,5 @@ confirmPaymentBtn?.addEventListener("click", () => {
 
 setTelegramUser();
 updateStatusBar();
-state.selectedPlan = state.plans[0];
+state.selectedPlan = state.plans.find((plan) => plan.months === 6) || state.plans[0];
 navigate("home");
