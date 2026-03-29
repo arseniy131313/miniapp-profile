@@ -645,7 +645,6 @@ function renderPlans() {
       </div>
 
       ${getModeToggleMarkup()}
-      ${getModePanelMarkup()}
 
       <div class="device-count-block">
         <div class="slider-top">
