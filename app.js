@@ -291,7 +291,7 @@ function getDeviceChangeText() {
   const next = state.selectedDeviceCount;
 
   if (!isRenewMode()) {
-    return `После оплаты будет доступно <strong>${next} ${getDeviceWord(next)}</strong>. Это итоговый лимит новой подписки.`;
+return `После оплаты будет доступно <strong>${next}&nbsp;${getDeviceWord(next)}</strong> — это итоговый лимит новой подписки.`;
   }
 
   const current = getCurrentDeviceLimit();
