@@ -265,7 +265,10 @@ p {
 .monitoring-summary-note,
 .slider-caption,
 .price-rule,
-.change-row-note
+.change-row-note {
+  color: var(--muted);
+  line-height: 1.45;
+}
 
 .section-title p,
 .hero-subtext,
@@ -278,7 +281,9 @@ p {
 .monitoring-summary-note,
 .slider-caption,
 .price-rule,
-.change-row-note
+.change-row-note {
+  font-size: 14px;
+}
 
 .home-stack {
   display: flex;
@@ -734,13 +739,15 @@ p {
 .count-helper {
   margin-top: 12px;
   color: var(--muted);
-  line-height: 1.45;
-  font-size: 14px;
+  line-height: 1.35;
+  font-size: 13px;
 }
 
-.count-helper strong {
+.count-helper strong,
+.nowrap {
   color: #e8f0ff;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .price-card {
@@ -1331,7 +1338,10 @@ p {
   .hero-meta,
   .device-grid,
   .action-row,
-  .monitoring-summary
+  .monitoring-summary {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
 
   .plan-head,
   .monitoring-meta,

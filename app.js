@@ -287,36 +287,42 @@ function getCurrentModeLabel() {
   return isDevicesOnlyMode() ? "Изменение устройств" : "Продление срока";
 }
 
+function wrapDeviceCount(count) {
+  return `<span class="nowrap"><strong>${count}&nbsp;${getDeviceWord(count)}</strong></span>`;
+}
+
 function getDeviceChangeText() {
   const next = state.selectedDeviceCount;
+  const nextLabel = wrapDeviceCount(next);
 
   if (!isRenewMode()) {
-    return `После оплаты будет доступно <strong>${next}&nbsp;${getDeviceWord(next)}</strong> — это итоговый лимит новой подписки.`;
+    return `После оплаты будет доступно ${nextLabel} — это итоговый лимит новой подписки.`;
   }
 
   const current = getCurrentDeviceLimit();
+  const currentLabel = wrapDeviceCount(current);
 
   if (isDevicesOnlyMode()) {
     if (next === current) {
-      return `Лимит устройств <strong>не изменится</strong> — останется ${next} ${getDeviceWord(next)}.`;
+      return `Лимит устройств не изменится — останется ${nextLabel}.`;
     }
 
     if (next > current) {
-      return `После оплаты лимит <strong>увеличится</strong>: ${current} → ${next} ${getDeviceWord(next)}.`;
+      return `После оплаты лимит увеличится: ${currentLabel} → ${nextLabel}.`;
     }
 
-    return `После подтверждения лимит <strong>уменьшится</strong>: ${current} → ${next} ${getDeviceWord(next)}.`;
+    return `После подтверждения лимит уменьшится: ${currentLabel} → ${nextLabel}.`;
   }
 
   if (next === current) {
-    return `Лимит устройств останется <strong>${next}</strong>, а срок подписки увеличится на выбранный период.`;
+    return `Лимит устройств останется ${nextLabel}, а срок подписки увеличится на выбранный период.`;
   }
 
   if (next > current) {
-    return `После оплаты срок продлится, а лимит устройств <strong>увеличится</strong>: ${current} → ${next}.`;
+    return `После оплаты срок продлится, а лимит увеличится: ${currentLabel} → ${nextLabel}.`;
   }
 
-  return `После оплаты срок продлится, а лимит устройств <strong>уменьшится</strong>: ${current} → ${next}.`;
+  return `После оплаты срок продлится, а лимит уменьшится: ${currentLabel} → ${nextLabel}.`;
 }
 
 function getDevicesOnlyPriceRuleText() {
@@ -324,7 +330,7 @@ function getDevicesOnlyPriceRuleText() {
   const next = state.selectedDeviceCount;
 
   if (next > current) {
-    return `Доплата рассчитана только за <strong>${next - current}</strong> ${getDeviceWord(next - current)} на оставшиеся <strong>${state.subscription.daysLeft}</strong> дней.`;
+    return `Доплата рассчитана только за <span class="nowrap"><strong>${next - current}&nbsp;${getDeviceWord(next - current)}</strong></span> на оставшиеся <span class="nowrap"><strong>${state.subscription.daysLeft}&nbsp;дн.</strong></span>.`;
   }
 
   if (next < current) {
