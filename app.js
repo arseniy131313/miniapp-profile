@@ -102,6 +102,7 @@ const state = {
   selectedPlan: null,
   selectedDeviceCount: 1,
   selectedPaymentMethod: "ЮKassa",
+  renewMode: "renew",
   user: {
     name: "Пользователь",
     username: "@username",
@@ -131,7 +132,7 @@ const state = {
       basePrice: 499,
       days: 90,
       months: 3,
-      description: "Комфортный старт"
+      description: "Оптимальный выбор"
     },
     {
       id: 3,
@@ -140,7 +141,7 @@ const state = {
       basePrice: 890,
       days: 180,
       months: 6,
-      description: "Оптимальный баланс цены и срока"
+      description: "Баланс цены и срока"
     },
     {
       id: 4,
@@ -149,7 +150,7 @@ const state = {
       basePrice: 1490,
       days: 365,
       months: 12,
-      description: "Максимальная экономия на долгий срок"
+      description: "Максимальная экономия"
     }
   ]
 };
@@ -164,11 +165,13 @@ const statusDot = document.getElementById("statusDot");
 const paymentModal = document.getElementById("paymentModal");
 const paymentBackdrop = document.getElementById("paymentBackdrop");
 const closePaymentModal = document.getElementById("closePaymentModal");
+const modalTitle = document.getElementById("modalTitle");
 const modalPlanName = document.getElementById("modalPlanName");
 const modalPlanPrice = document.getElementById("modalPlanPrice");
 const modalDeviceCount = document.getElementById("modalDeviceCount");
 const modalPlanSave = document.getElementById("modalPlanSave");
 const confirmPaymentBtn = document.getElementById("confirmPaymentBtn");
+const paymentMethods = document.getElementById("paymentMethods");
 const toast = document.getElementById("toast");
 
 function hapticLight() {
@@ -196,27 +199,16 @@ function isRenewMode() {
   return state.subscription.active;
 }
 
+function isDevicesOnlyMode() {
+  return isRenewMode() && state.renewMode === "devices";
+}
+
 function getMonthlyPlan() {
   return state.plans.find((plan) => plan.months === 1) || state.plans[0];
 }
 
-function getMaxAddableDevices() {
-  return Math.max(0, MAX_DEVICES - state.subscription.deviceLimit);
-}
-
 function getSelectedTotalDeviceCount() {
-  return isRenewMode()
-    ? state.subscription.deviceLimit + state.selectedDeviceCount
-    : state.selectedDeviceCount;
-}
-
-function getCountOptions() {
-  if (!isRenewMode()) {
-    return Array.from({ length: MAX_DEVICES }, (_, index) => index + 1);
-  }
-
-  const maxAddable = getMaxAddableDevices();
-  return Array.from({ length: maxAddable + 1 }, (_, index) => index);
+  return state.selectedDeviceCount;
 }
 
 function getPlanTotalPrice(plan) {
@@ -238,6 +230,128 @@ function getPlanSavingsPercent(plan) {
 
 function getPlanMonthlyPrice(plan) {
   return Math.round(getPlanTotalPrice(plan) / plan.months);
+}
+
+function getDeviceWord(count) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+
+  if (mod10 === 1 && mod100 !== 11) {
+    return "устройство";
+  }
+
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return "устройства";
+  }
+
+  return "устройств";
+}
+
+function getCurrentDeviceLimit() {
+  return Math.min(MAX_DEVICES, Math.max(1, state.subscription.deviceLimit || 1));
+}
+
+function getDevicesOnlyPrice() {
+  if (!isDevicesOnlyMode()) {
+    return 0;
+  }
+
+  const currentLimit = getCurrentDeviceLimit();
+  const nextLimit = state.selectedDeviceCount;
+  const delta = nextLimit - currentLimit;
+
+  if (delta <= 0) {
+    return 0;
+  }
+
+  const monthlyPlan = getMonthlyPlan();
+  const perDevicePerDay = monthlyPlan.basePrice / 30;
+  const remainingDays = Math.max(1, state.subscription.daysLeft || 1);
+
+  return Math.max(0, Math.round(perDevicePerDay * remainingDays * delta));
+}
+
+function getCurrentActionPrice() {
+  if (isDevicesOnlyMode()) {
+    return getDevicesOnlyPrice();
+  }
+
+  return getPlanTotalPrice(state.selectedPlan);
+}
+
+function getCurrentModeLabel() {
+  if (!isRenewMode()) {
+    return "Новая подписка";
+  }
+
+  return isDevicesOnlyMode() ? "Изменение устройств" : "Продление срока";
+}
+
+function getDeviceChangeText() {
+  const next = state.selectedDeviceCount;
+
+  if (!isRenewMode()) {
+    return `После оплаты будет доступно <strong>${next} ${getDeviceWord(next)}</strong>. Это итоговый лимит новой подписки.`;
+  }
+
+  const current = getCurrentDeviceLimit();
+
+  if (isDevicesOnlyMode()) {
+    if (next === current) {
+      return `Лимит устройств <strong>не изменится</strong> — останется ${next} ${getDeviceWord(next)}.`;
+    }
+
+    if (next > current) {
+      return `После оплаты лимит <strong>увеличится</strong>: ${current} → ${next} ${getDeviceWord(next)}.`;
+    }
+
+    return `После подтверждения лимит <strong>уменьшится</strong>: ${current} → ${next} ${getDeviceWord(next)}.`;
+  }
+
+  if (next === current) {
+    return `Лимит устройств останется <strong>${next}</strong>, а срок подписки увеличится на выбранный период.`;
+  }
+
+  if (next > current) {
+    return `После оплаты срок продлится, а лимит устройств <strong>увеличится</strong>: ${current} → ${next}.`;
+  }
+
+  return `После оплаты срок продлится, а лимит устройств <strong>уменьшится</strong>: ${current} → ${next}.`;
+}
+
+function getDevicesOnlyPriceRuleText() {
+  const current = getCurrentDeviceLimit();
+  const next = state.selectedDeviceCount;
+
+  if (next > current) {
+    return `Доплата рассчитана только за <strong>${next - current}</strong> ${getDeviceWord(next - current)} на оставшиеся <strong>${state.subscription.daysLeft}</strong> дней.`;
+  }
+
+  if (next < current) {
+    return `Уменьшение лимита применяется <strong>без доплаты</strong>. Срок подписки не изменится.`;
+  }
+
+  return `Лимит не меняется, поэтому доплата не требуется. Срок подписки останется прежним.`;
+}
+
+function getDevicesOnlyActionText() {
+  const current = getCurrentDeviceLimit();
+  const next = state.selectedDeviceCount;
+  const price = getDevicesOnlyPrice();
+
+  if (next > current && price > 0) {
+    return `Доплата ${formatRubles(price)} за увеличение лимита`;
+  }
+
+  if (next < current) {
+    return "Изменение лимита без продления срока";
+  }
+
+  return "Изменение лимита без доплаты";
+}
+
+function getDevicesOnlyButtonText() {
+  return getDevicesOnlyPrice() > 0 ? "Оплатить и применить" : "Применить изменения";
 }
 
 function setTelegramUser() {
@@ -284,19 +398,65 @@ function getStatusSubvalue() {
     return "Оформите тариф и получите доступ сразу после оплаты";
   }
 
-  return state.subscription.plan || "Подписка активна";
-}
-
-function getDeviceUsageLabel() {
-  if (!state.subscription.deviceLimit) {
-    return "0 / 0";
-  }
-
-  return `0 / ${state.subscription.deviceLimit}`;
+  return state.subscription.plan || "Подписка оформлена";
 }
 
 function getBestLocation() {
   return monitoringLocations.reduce((best, item) => item.load < best.load ? item : best, monitoringLocations[0]);
+}
+
+function updateSliderUI() {
+  const slider = document.getElementById("deviceSlider");
+  const valueEl = document.getElementById("deviceSliderValue");
+  const labelEl = document.getElementById("deviceSliderLabel");
+  const helperEl = document.getElementById("deviceHelperText");
+  const priceValueEl = document.getElementById("devicesOnlyPriceValue");
+  const priceRuleEl = document.getElementById("devicesOnlyPriceRule");
+  const actionEl = document.getElementById("devicesOnlyActionText");
+
+  if (!slider || !valueEl || !labelEl) return;
+
+  const value = Number(slider.value);
+  const min = Number(slider.min);
+  const max = Number(slider.max);
+  const percent = ((value - min) / (max - min)) * 100;
+
+  valueEl.textContent = String(value);
+  labelEl.textContent = getDeviceWord(value);
+  slider.style.setProperty("--range-progress", `${percent}%`);
+
+  if (helperEl) {
+    helperEl.innerHTML = getDeviceChangeText();
+  }
+
+  if (priceValueEl && isDevicesOnlyMode()) {
+    priceValueEl.textContent = formatRubles(getDevicesOnlyPrice());
+  }
+
+  if (priceRuleEl && isDevicesOnlyMode()) {
+    priceRuleEl.innerHTML = getDevicesOnlyPriceRuleText();
+  }
+
+  if (actionEl && isDevicesOnlyMode()) {
+    actionEl.textContent = getDevicesOnlyActionText();
+  }
+}
+
+function bindDeviceSlider() {
+  const slider = document.getElementById("deviceSlider");
+  if (!slider) return;
+
+  slider.addEventListener("input", () => {
+    state.selectedDeviceCount = Number(slider.value);
+    updateSliderUI();
+    refreshPlanPrices();
+  });
+
+  slider.addEventListener("change", () => {
+    hapticSelection();
+  });
+
+  updateSliderUI();
 }
 
 function renderHome() {
@@ -313,8 +473,8 @@ function renderHome() {
           <div class="hero-meta">
             <div class="metric-card">
               <div class="metric-label">Устройства</div>
-              <div class="metric-value">${hasSubscription ? getDeviceUsageLabel() : "До 10"}</div>
-              <div class="metric-subtext">${hasSubscription ? "Подключено сейчас / доступно по тарифу" : "Количество выбирается при оформлении"}</div>
+              <div class="metric-value">${hasSubscription ? state.subscription.deviceLimit : "До 10"}</div>
+              <div class="metric-subtext">${hasSubscription ? "Лимит по текущей подписке" : "Количество выбирается при оформлении"}</div>
             </div>
 
             <div class="metric-card">
@@ -348,9 +508,10 @@ function renderHome() {
     hapticLight();
 
     if (hasSubscription) {
-      state.selectedDeviceCount = 0;
+      state.selectedDeviceCount = Math.min(MAX_DEVICES, getCurrentDeviceLimit());
+      state.renewMode = "renew";
     } else {
-      state.selectedDeviceCount = Math.max(1, state.selectedDeviceCount);
+      state.selectedDeviceCount = Math.min(MAX_DEVICES, Math.max(1, state.selectedDeviceCount || 1));
     }
 
     navigate("plans");
@@ -367,19 +528,12 @@ function renderHome() {
   });
 }
 
-function updateCountUI() {
-  const triggerValue = document.getElementById("countValue");
-
-  if (triggerValue) {
-    triggerValue.textContent = String(state.selectedDeviceCount);
+function refreshPlanPrices() {
+  if (isDevicesOnlyMode()) {
+    updateSliderUI();
+    return;
   }
 
-  document.querySelectorAll(".count-option").forEach((btn) => {
-    btn.classList.toggle("active", Number(btn.dataset.deviceCount) === state.selectedDeviceCount);
-  });
-}
-
-function refreshPlanPrices() {
   document.querySelectorAll(".plan-card").forEach((card) => {
     const planId = Number(card.dataset.planId);
     const plan = state.plans.find((item) => item.id === planId);
@@ -396,66 +550,8 @@ function refreshPlanPrices() {
     }
 
     if (noteEl) {
-      if (isRenewMode()) {
-        const total = getSelectedTotalDeviceCount();
-        const added = state.selectedDeviceCount;
-        noteEl.textContent = added > 0
-          ? `${state.subscription.deviceLimit} + ${added} = ${total} устройств`
-          : `${total} устройств без изменений`;
-      } else {
-        noteEl.textContent = `за ${state.selectedDeviceCount} устройств`;
-      }
+      noteEl.textContent = `за ${state.selectedDeviceCount} ${getDeviceWord(state.selectedDeviceCount)}`;
     }
-  });
-}
-
-function openCountMenu() {
-  const picker = document.getElementById("countPicker");
-  const menu = document.getElementById("countMenu");
-
-  if (!picker || !menu) return;
-
-  menu.classList.remove("hidden");
-  picker.classList.add("open");
-}
-
-function closeCountMenu() {
-  const picker = document.getElementById("countPicker");
-  const menu = document.getElementById("countMenu");
-
-  if (!picker || !menu) return;
-
-  menu.classList.add("hidden");
-  picker.classList.remove("open");
-}
-
-function bindCountPicker() {
-  const trigger = document.getElementById("countTrigger");
-  const options = document.querySelectorAll(".count-option");
-
-  if (trigger && !trigger.disabled) {
-    trigger.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const menu = document.getElementById("countMenu");
-
-      if (menu?.classList.contains("hidden")) {
-        openCountMenu();
-      } else {
-        closeCountMenu();
-      }
-    });
-  }
-
-  options.forEach((btn) => {
-    btn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      hapticSelection();
-
-      state.selectedDeviceCount = Number(btn.dataset.deviceCount);
-      updateCountUI();
-      refreshPlanPrices();
-      closeCountMenu();
-    });
   });
 }
 
@@ -472,21 +568,95 @@ function getPlanBadgeMarkup(plan) {
   `;
 }
 
+function getModeToggleMarkup() {
+  if (!isRenewMode()) {
+    return "";
+  }
+
+  return `
+    <div class="mode-toggle">
+      <button class="mode-toggle-btn ${state.renewMode === "renew" ? "active" : ""}" data-mode="renew" type="button">Продлить срок</button>
+      <button class="mode-toggle-btn ${state.renewMode === "devices" ? "active" : ""}" data-mode="devices" type="button">Только устройства</button>
+    </div>
+  `;
+}
+
+function getModePanelMarkup() {
+  if (!isDevicesOnlyMode()) {
+    return "";
+  }
+
+  return `
+    <div class="mode-panel">
+      <div class="device-count-title">Текущая подписка</div>
+      <div class="mode-panel-text">Этот режим не продлевает срок. Меняется только лимит устройств в текущей подписке.</div>
+
+      <div class="mode-panel-grid">
+        <div class="mode-panel-card">
+          <div class="metric-label">Сейчас устройств</div>
+          <div class="mode-panel-value">${getCurrentDeviceLimit()}</div>
+        </div>
+
+        <div class="mode-panel-card">
+          <div class="metric-label">Осталось дней</div>
+          <div class="mode-panel-value">${state.subscription.daysLeft}</div>
+        </div>
+
+        <div class="mode-panel-card">
+          <div class="metric-label">Действует</div>
+          <div class="mode-panel-value">Сейчас</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getDevicesOnlyPriceCardMarkup() {
+  if (!isDevicesOnlyMode()) {
+    return "";
+  }
+
+  return `
+    <div class="price-card">
+      <div class="price-card-top">
+        <div>
+          <div class="price-card-title">Изменение лимита</div>
+          <div class="price-rule" id="devicesOnlyActionText">${getDevicesOnlyActionText()}</div>
+        </div>
+        <div class="price-card-value" id="devicesOnlyPriceValue">${formatRubles(getDevicesOnlyPrice())}</div>
+      </div>
+
+      <div class="price-card-list">
+        <div class="change-row">
+          <span>Текущий лимит</span>
+          <strong>${getCurrentDeviceLimit()} ${getDeviceWord(getCurrentDeviceLimit())}</strong>
+        </div>
+        <div class="change-row">
+          <span>Новый лимит</span>
+          <strong>${state.selectedDeviceCount} ${getDeviceWord(state.selectedDeviceCount)}</strong>
+        </div>
+      </div>
+
+      <div class="change-row-note" id="devicesOnlyPriceRule">${getDevicesOnlyPriceRuleText()}</div>
+    </div>
+  `;
+}
+
 function renderPlans() {
   if (!state.selectedPlan) {
     state.selectedPlan = state.plans.find((plan) => plan.months === 3) || state.plans[0];
   }
 
-  const renewMode = isRenewMode();
-  const countOptions = getCountOptions();
-  const maxAddable = getMaxAddableDevices();
-
-  if (renewMode) {
-    if (state.selectedDeviceCount < 0 || state.selectedDeviceCount > maxAddable) {
-      state.selectedDeviceCount = 0;
-    }
-  } else if (state.selectedDeviceCount < 1) {
-    state.selectedDeviceCount = 1;
+  if (isRenewMode()) {
+    state.selectedDeviceCount = Math.min(
+      MAX_DEVICES,
+      Math.max(1, state.selectedDeviceCount || getCurrentDeviceLimit())
+    );
+  } else {
+    state.selectedDeviceCount = Math.min(
+      MAX_DEVICES,
+      Math.max(1, state.selectedDeviceCount || 1)
+    );
   }
 
   appContent.innerHTML = `
@@ -494,91 +664,103 @@ function renderPlans() {
       <div class="section-title">
         <div>
           <div class="eyebrow">Выбор тарифа</div>
-          <h2>Тарифы</h2>
-          <p>${renewMode
-            ? "Выберите срок продления и при необходимости добавьте устройства до лимита 10."
-            : "Выберите срок подписки и общее количество устройств."}
+          <h2>${isRenewMode() ? "Управление подпиской" : "Тарифы"}</h2>
+          <p>${!isRenewMode()
+            ? "Выберите срок подписки и количество устройств."
+            : (isDevicesOnlyMode()
+              ? "Измените лимит устройств без продления текущего срока подписки."
+              : "Выберите новый срок и при необходимости скорректируйте лимит устройств.")}
           </p>
         </div>
       </div>
 
+      ${getModeToggleMarkup()}
+      ${getModePanelMarkup()}
+
       <div class="device-count-block">
-        <div class="device-count-title">${renewMode ? "Добавить устройства" : "Количество устройств"}</div>
+        <div class="slider-top">
+          <div class="device-count-title">Количество устройств</div>
 
-        <div class="count-picker" id="countPicker">
-          <button class="count-trigger" id="countTrigger" type="button" ${renewMode && maxAddable === 0 ? "disabled" : ""}>
-            <span class="count-trigger-label">${renewMode ? "Добавить" : "Устройств"}</span>
-            <span class="count-trigger-value">
-              <strong id="countValue">${state.selectedDeviceCount}</strong>
-              <span class="count-chevron">▾</span>
-            </span>
-          </button>
-
-          <div class="count-menu hidden" id="countMenu">
-            <div class="count-options-grid">
-              ${countOptions.map((count) => `
-                <button
-                  class="count-option ${state.selectedDeviceCount === count ? "active" : ""}"
-                  data-device-count="${count}"
-                  type="button"
-                >
-                  ${count}
-                </button>
-              `).join("")}
-            </div>
+          <div class="slider-value-badge">
+            <strong id="deviceSliderValue">${state.selectedDeviceCount}</strong>
+            <span id="deviceSliderLabel">${getDeviceWord(state.selectedDeviceCount)}</span>
           </div>
         </div>
 
-        <div class="count-helper">
-          ${renewMode
-            ? (maxAddable > 0
-              ? `Сейчас доступно ${state.subscription.deviceLimit} устройств. Можно добавить ещё до ${maxAddable}.`
-              : `Уже выбран максимальный лимит — ${MAX_DEVICES} устройств.`)
-            : `На первой покупке можно выбрать от 1 до ${MAX_DEVICES} устройств.`}
+        <div class="slider-shell">
+          <div class="slider-caption">${isDevicesOnlyMode() ? "Итоговый лимит в текущей подписке" : "Итоговый лимит после оплаты"}</div>
+
+          <input
+            id="deviceSlider"
+            class="device-slider"
+            type="range"
+            min="1"
+            max="${MAX_DEVICES}"
+            step="1"
+            value="${state.selectedDeviceCount}"
+          />
+
+          <div class="slider-scale">
+            <span>1</span>
+            <span>${MAX_DEVICES}</span>
+          </div>
+
+          <div class="slider-marks">
+            ${Array.from({ length: MAX_DEVICES }, () => `<span class="slider-mark"></span>`).join("")}
+          </div>
         </div>
+
+        <div class="count-helper" id="deviceHelperText">${getDeviceChangeText()}</div>
       </div>
 
-      <div class="plan-list">
-        ${state.plans.map((plan) => `
-          <button class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""} ${plan.months === 3 ? "hit-plan" : ""}" data-plan-id="${plan.id}" type="button">
-            <div class="plan-topline">
-              <div class="plan-badges">
-                ${getPlanBadgeMarkup(plan)}
-              </div>
-            </div>
-
-            <div class="plan-head">
-              <div>
-                <div class="plan-name">${plan.name}</div>
-                <div class="plan-desc">${plan.description} · ${plan.days} дней доступа</div>
-              </div>
-
-              <div class="plan-price-wrap">
-                <div class="plan-price">${formatPriceMarkup(getPlanTotalPrice(plan))}</div>
-                <div class="plan-price-note">
-                  ${renewMode
-                    ? (state.selectedDeviceCount > 0
-                      ? `${state.subscription.deviceLimit} + ${state.selectedDeviceCount} = ${getSelectedTotalDeviceCount()} устройств`
-                      : `${getSelectedTotalDeviceCount()} устройств без изменений`)
-                    : `за ${state.selectedDeviceCount} устройств`}
+      ${isDevicesOnlyMode() ? "" : `
+        <div class="plan-list">
+          ${state.plans.map((plan) => `
+            <button class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""} ${plan.months === 3 ? "hit-plan" : ""}" data-plan-id="${plan.id}" type="button">
+              <div class="plan-topline">
+                <div class="plan-badges">
+                  ${getPlanBadgeMarkup(plan)}
                 </div>
-                <div class="plan-monthly">≈ ${formatRubles(getPlanMonthlyPrice(plan))} / мес.</div>
               </div>
-            </div>
-          </button>
-        `).join("")}
-      </div>
+
+              <div class="plan-head">
+                <div>
+                  <div class="plan-name">${plan.name}</div>
+                  <div class="plan-desc">${plan.description} · ${plan.days} дней доступа</div>
+                </div>
+
+                <div class="plan-price-wrap">
+                  <div class="plan-price">${formatPriceMarkup(getPlanTotalPrice(plan))}</div>
+                  <div class="plan-price-note">за ${state.selectedDeviceCount} ${getDeviceWord(state.selectedDeviceCount)}</div>
+                  <div class="plan-monthly">≈ ${formatRubles(getPlanMonthlyPrice(plan))} / мес.</div>
+                </div>
+              </div>
+            </button>
+          `).join("")}
+        </div>
+      `}
+
+      ${getDevicesOnlyPriceCardMarkup()}
 
       <div class="action-row" style="margin-top:14px;">
-        <button class="primary-btn glow-btn" id="openPaymentBtn" type="button">${renewMode ? "Продлить подписку" : "Перейти к оплате"}</button>
+        <button class="primary-btn glow-btn" id="openPaymentBtn" type="button">${isDevicesOnlyMode() ? getDevicesOnlyButtonText() : (isRenewMode() ? "Продлить подписку" : "Перейти к оплате")}</button>
       </div>
 
       <button class="back-btn" id="backHomeFromPlans" type="button" style="margin-top:14px;">Назад на главную</button>
     </section>
   `;
 
-  const planButtons = document.querySelectorAll(".plan-card");
+  const modeButtons = document.querySelectorAll(".mode-toggle-btn");
+  modeButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      hapticSelection();
+      state.renewMode = btn.dataset.mode;
+      state.selectedDeviceCount = getCurrentDeviceLimit();
+      renderPlans();
+    });
+  });
 
+  const planButtons = document.querySelectorAll(".plan-card");
   planButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       hapticSelection();
@@ -592,7 +774,7 @@ function renderPlans() {
     });
   });
 
-  bindCountPicker();
+  bindDeviceSlider();
 
   document.getElementById("openPaymentBtn").addEventListener("click", () => {
     hapticLight();
@@ -612,7 +794,7 @@ function renderDevices() {
         <div>
           <div class="eyebrow">Инструкции</div>
           <h2>Подключение устройств</h2>
-          <p>Выберите платформу и откройте инструкцию по настройке VPN без лишних повторяющихся названий.</p>
+          <p>Выберите платформу и откройте инструкцию по настройке VPN.</p>
         </div>
       </div>
 
@@ -697,7 +879,9 @@ function getMonitoringRow(location, isBest) {
 
 function renderMonitoring() {
   const bestLocation = getBestLocation();
-  const averageLoad = Math.round(monitoringLocations.reduce((sum, item) => sum + item.load, 0) / monitoringLocations.length);
+  const averageLoad = Math.round(
+    monitoringLocations.reduce((sum, item) => sum + item.load, 0) / monitoringLocations.length
+  );
 
   appContent.innerHTML = `
     <section class="card fade-in">
@@ -705,7 +889,7 @@ function renderMonitoring() {
         <div>
           <div class="eyebrow">Состояние сети</div>
           <h2>Мониторинг</h2>
-          <p>Экран выглядит чище и ближе к премиальному продукту: сразу видно лучшую локацию, нагрузку и стабильность сети.</p>
+          <p>Здесь можно быстро оценить загрузку локаций и выбрать самый комфортный сервер.</p>
         </div>
       </div>
 
@@ -769,23 +953,28 @@ function openPaymentModal() {
     state.selectedPlan = state.plans.find((plan) => plan.months === 3) || state.plans[0];
   }
 
-  const savings = getPlanSavingsPercent(state.selectedPlan);
+  const savings = isDevicesOnlyMode() ? 0 : getPlanSavingsPercent(state.selectedPlan);
+  const price = getCurrentActionPrice();
 
-  modalPlanName.textContent = state.selectedPlan.name;
-  modalPlanPrice.textContent = formatRubles(getPlanTotalPrice(state.selectedPlan));
-  modalPlanSave.textContent = savings > 0 ? `${savings}%` : "0%";
+  modalTitle.textContent = price > 0 ? "Оплата" : "Подтверждение";
+  modalPlanName.textContent = getCurrentModeLabel();
+  modalPlanPrice.textContent = formatRubles(price);
+  modalPlanSave.textContent = savings > 0 ? `${savings}%` : "—";
 
-  if (isRenewMode()) {
-    if (state.selectedDeviceCount > 0) {
-      modalDeviceCount.textContent = `+${state.selectedDeviceCount} → ${getSelectedTotalDeviceCount()} всего`;
-    } else {
-      modalDeviceCount.textContent = `${getSelectedTotalDeviceCount()} всего`;
-    }
+  if (isDevicesOnlyMode()) {
+    modalDeviceCount.textContent = `${getCurrentDeviceLimit()} → ${state.selectedDeviceCount} ${getDeviceWord(state.selectedDeviceCount)}`;
   } else {
-    modalDeviceCount.textContent = String(state.selectedDeviceCount);
+    modalDeviceCount.textContent = `${state.selectedDeviceCount} ${getDeviceWord(state.selectedDeviceCount)}`;
   }
 
-  confirmPaymentBtn.textContent = state.subscription.active ? "Продлить" : "Оплатить";
+  paymentMethods.classList.toggle("hidden", price <= 0);
+
+  if (isDevicesOnlyMode()) {
+    confirmPaymentBtn.textContent = price > 0 ? "Оплатить и применить" : "Применить изменения";
+  } else {
+    confirmPaymentBtn.textContent = state.subscription.active ? "Продлить" : "Оплатить";
+  }
+
   paymentModal.classList.remove("hidden");
 
   document.querySelectorAll(".payment-method").forEach((btn) => {
@@ -799,16 +988,34 @@ function closePayment() {
 
 function simulatePayment() {
   const plan = state.selectedPlan;
-  const renew = isRenewMode();
+  const price = getCurrentActionPrice();
 
   confirmPaymentBtn.disabled = true;
-  confirmPaymentBtn.textContent = "Обработка...";
+  confirmPaymentBtn.textContent = price > 0 ? "Обработка..." : "Применение...";
 
   setTimeout(() => {
-    if (renew) {
+    if (isDevicesOnlyMode()) {
+      state.subscription.deviceLimit = state.selectedDeviceCount;
+      updateStatusBar();
+      closePayment();
+      confirmPaymentBtn.disabled = false;
+      confirmPaymentBtn.textContent = getDevicesOnlyButtonText();
+      hapticSuccess();
+
+      if (price > 0) {
+        showToast(`Лимит изменён: теперь ${state.subscription.deviceLimit} ${getDeviceWord(state.subscription.deviceLimit)}.`);
+      } else {
+        showToast(`Лимит обновлён: теперь ${state.subscription.deviceLimit} ${getDeviceWord(state.subscription.deviceLimit)}.`);
+      }
+
+      navigate("home");
+      return;
+    }
+
+    if (state.subscription.active) {
       state.subscription.daysLeft += plan.days;
       state.subscription.plan = plan.name;
-      state.subscription.deviceLimit = getSelectedTotalDeviceCount();
+      state.subscription.deviceLimit = state.selectedDeviceCount;
     } else {
       state.subscription.active = true;
       state.subscription.plan = plan.name;
@@ -819,15 +1026,10 @@ function simulatePayment() {
     updateStatusBar();
     closePayment();
     confirmPaymentBtn.disabled = false;
-    confirmPaymentBtn.textContent = renew ? "Продлить" : "Оплатить";
+    confirmPaymentBtn.textContent = state.subscription.active ? "Продлить" : "Оплатить";
 
     hapticSuccess();
-
-    if (renew) {
-      showToast(`Продлено на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устройств`);
-    } else {
-      showToast(`Активировано на ${plan.days} дней · лимит ${state.subscription.deviceLimit} устройств`);
-    }
+    showToast(`Срок обновлён на ${plan.days} дней · лимит ${state.subscription.deviceLimit} ${getDeviceWord(state.subscription.deviceLimit)}.`);
 
     navigate("home");
   }, 1200);
@@ -842,17 +1044,6 @@ document.querySelectorAll(".payment-method").forEach((btn) => {
       item.classList.toggle("active", item.dataset.method === state.selectedPaymentMethod);
     });
   });
-});
-
-document.addEventListener("click", (event) => {
-  if (state.currentScreen !== "plans") return;
-
-  const picker = document.getElementById("countPicker");
-  if (!picker) return;
-
-  if (!picker.contains(event.target)) {
-    closeCountMenu();
-  }
 });
 
 paymentBackdrop?.addEventListener("click", closePayment);

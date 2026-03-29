@@ -42,7 +42,7 @@
       <div class="modal-header">
         <div>
           <div class="eyebrow">Подтверждение</div>
-          <h3>Оплата</h3>
+          <h3 id="modalTitle">Оплата</h3>
         </div>
         <button id="closePaymentModal" class="icon-btn" type="button" aria-label="Закрыть">✕</button>
       </div>
@@ -50,12 +50,12 @@
       <div class="modal-body">
         <div class="summary-box">
           <div class="summary-row">
-            <span>Тариф</span>
+            <span>Режим</span>
             <strong id="modalPlanName">—</strong>
           </div>
           <div class="summary-row">
-            <span>Устройств</span>
-            <strong id="modalDeviceCount">1</strong>
+            <span>Устройства</span>
+            <strong id="modalDeviceCount">—</strong>
           </div>
           <div class="summary-row discount-row">
             <span>Скидка</span>
@@ -67,7 +67,7 @@
           </div>
         </div>
 
-        <div class="payment-methods">
+        <div id="paymentMethods" class="payment-methods">
           <button class="payment-method active" data-method="ЮKassa" type="button">ЮKassa</button>
           <button class="payment-method" data-method="Telegram Stars" type="button">Telegram Stars</button>
           <button class="payment-method" data-method="Криптовалюта" type="button">Криптовалюта</button>
