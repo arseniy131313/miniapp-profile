@@ -265,11 +265,7 @@ p {
 .monitoring-summary-note,
 .slider-caption,
 .price-rule,
-.change-row-note,
-.mode-panel-text {
-  color: var(--muted);
-  line-height: 1.45;
-}
+.change-row-note
 
 .section-title p,
 .hero-subtext,
@@ -282,10 +278,7 @@ p {
 .monitoring-summary-note,
 .slider-caption,
 .price-rule,
-.change-row-note,
-.mode-panel-text {
-  font-size: 14px;
-}
+.change-row-note
 
 .home-stack {
   display: flex;
@@ -574,35 +567,6 @@ p {
   background: linear-gradient(180deg, rgba(127, 178, 255, 0.16), rgba(77, 134, 255, 0.12));
   border-color: rgba(127, 178, 255, 0.18);
   box-shadow: var(--glow);
-}
-
-.mode-panel {
-  margin-top: 14px;
-  padding: 16px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(18, 27, 43, 0.96), rgba(11, 17, 29, 0.98));
-  border: 1px solid rgba(255,255,255,0.06);
-}
-
-.mode-panel-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.mode-panel-card {
-  padding: 14px;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.05);
-}
-
-.mode-panel-value {
-  font-size: 22px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.04em;
 }
 
 .device-count-block {
@@ -1367,11 +1331,7 @@ p {
   .hero-meta,
   .device-grid,
   .action-row,
-  .monitoring-summary,
-  .mode-panel-grid {
-    grid-template-columns: 1fr;
-    flex-direction: column;
-  }
+  .monitoring-summary
 
   .plan-head,
   .monitoring-meta,

@@ -581,36 +581,6 @@ function getModeToggleMarkup() {
   `;
 }
 
-function getModePanelMarkup() {
-  if (!isDevicesOnlyMode()) {
-    return "";
-  }
-
-  return `
-    <div class="mode-panel">
-      <div class="device-count-title">Текущая подписка</div>
-      <div class="mode-panel-text">Этот режим не продлевает срок. Меняется только лимит устройств в текущей подписке.</div>
-
-      <div class="mode-panel-grid">
-        <div class="mode-panel-card">
-          <div class="metric-label">Сейчас устройств</div>
-          <div class="mode-panel-value">${getCurrentDeviceLimit()}</div>
-        </div>
-
-        <div class="mode-panel-card">
-          <div class="metric-label">Осталось дней</div>
-          <div class="mode-panel-value">${state.subscription.daysLeft}</div>
-        </div>
-
-        <div class="mode-panel-card">
-          <div class="metric-label">Действует</div>
-          <div class="mode-panel-value">Сейчас</div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 function getDevicesOnlyPriceCardMarkup() {
   if (!isDevicesOnlyMode()) {
     return "";
