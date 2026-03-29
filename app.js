@@ -306,16 +306,8 @@ function renderHome() {
   appContent.innerHTML = `
     <section class="card fade-in">
       <div class="home-stack">
-        <div class="hero-card">
-          <div class="hero-topline">
-            <div class="hero-chip ${hasSubscription ? "success" : "offline"}">
-              <span class="hero-chip-dot"></span>
-              ${hasSubscription ? "Подписка активна" : "Ожидает активации"}
-            </div>
-            <div class="hero-accent">Защищённое подключение</div>
-          </div>
-
-          <h2 class="hero-title">${hasSubscription ? `${state.subscription.daysLeft} дней` : "VPN Premium"}</h2>
+        <div class="hero-card ${hasSubscription ? "active-panel" : ""}">
+          <h2 class="hero-title">${hasSubscription ? `${state.subscription.daysLeft} дней` : "Оформите подписку"}</h2>
           <div class="hero-subtext">${getStatusSubvalue()}</div>
 
           <div class="hero-meta">
@@ -344,7 +336,8 @@ function renderHome() {
               <div class="monitor-title">Мониторинг сети</div>
               <div class="monitor-link">${bestLocation.name} · ${bestLocation.load}%</div>
             </div>
-            <div class="monitor-note">Проверяйте загруженность локаций и выбирайте самый свободный сервер без лишних переходов.</div>
+            <div class="monitor-note">Проверяйте загруженность локаций и быстро открывайте самый стабильный маршрут.</div>
+            <div class="monitor-cta">Открыть мониторинг →</div>
           </button>
         </div>
       </div>
@@ -475,13 +468,13 @@ function getPlanBadgeMarkup(plan) {
 
   return `
     <span class="plan-badge discount">Скидка ${savings}%</span>
-    ${plan.months === 6 ? `<span class="plan-badge hit">Хит</span>` : ""}
+    ${plan.months === 3 ? `<span class="plan-badge hit">Хит</span>` : ""}
   `;
 }
 
 function renderPlans() {
   if (!state.selectedPlan) {
-    state.selectedPlan = state.plans.find((plan) => plan.months === 6) || state.plans[0];
+    state.selectedPlan = state.plans.find((plan) => plan.months === 3) || state.plans[0];
   }
 
   const renewMode = isRenewMode();
@@ -547,7 +540,7 @@ function renderPlans() {
 
       <div class="plan-list">
         ${state.plans.map((plan) => `
-          <button class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""} ${plan.months === 6 ? "hit-plan" : ""}" data-plan-id="${plan.id}" type="button">
+          <button class="plan-card ${state.selectedPlan.id === plan.id ? "active" : ""} ${plan.months === 3 ? "hit-plan" : ""}" data-plan-id="${plan.id}" type="button">
             <div class="plan-topline">
               <div class="plan-badges">
                 ${getPlanBadgeMarkup(plan)}
@@ -872,5 +865,5 @@ confirmPaymentBtn?.addEventListener("click", () => {
 
 setTelegramUser();
 updateStatusBar();
-state.selectedPlan = state.plans.find((plan) => plan.months === 6) || state.plans[0];
+state.selectedPlan = state.plans.find((plan) => plan.months === 3) || state.plans[0];
 navigate("home");
