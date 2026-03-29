@@ -602,17 +602,6 @@ function getDevicesOnlyPriceCardMarkup() {
         <div class="price-card-value" id="devicesOnlyPriceValue">${formatRubles(getDevicesOnlyPrice())}</div>
       </div>
 
-      <div class="price-card-list">
-        <div class="change-row">
-          <span>Текущий лимит</span>
-          <strong>${getCurrentDeviceLimit()} ${getDeviceWord(getCurrentDeviceLimit())}</strong>
-        </div>
-        <div class="change-row">
-          <span>Новый лимит</span>
-          <strong>${state.selectedDeviceCount} ${getDeviceWord(state.selectedDeviceCount)}</strong>
-        </div>
-      </div>
-
       <div class="change-row-note" id="devicesOnlyPriceRule">${getDevicesOnlyPriceRuleText()}</div>
     </div>
   `;
